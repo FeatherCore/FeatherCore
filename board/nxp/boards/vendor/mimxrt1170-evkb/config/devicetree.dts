@@ -1,0 +1,126 @@
+// MIMXRT1170-EVKB Device Tree
+// MIMXRT1170-EVKB 设备树
+//
+// 基于 Zephyr 的 mimxrt1170_evk 设备树配置移植
+
+/dts-v1/;
+
+/ {
+    model = "NXP MIMXRT1170-EVK board";
+    compatible = "nxp,mimxrt1176";
+
+    // 内存定义
+    // SDRAM (64MB)
+    sdram0: memory@80000000 {
+        device_type = "memory";
+        reg = <0x80000000 0x4000000>;
+    };
+
+    // DTCM
+    dtcm: memory@20000000 {
+        device_type = "memory";
+        reg = <0x20000000 0x20000>;
+    };
+
+    // SoC 节点定义
+    soc {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        compatible = "nxp,imxrt1176";
+        ranges;
+
+        // LPUART1 串口节点定义
+        lpuart1: serial@400c4000 {
+            compatible = "nxp,lpuart";
+            reg = <0x400c4000 0x4000>;
+            interrupts = <19>;
+            status = "okay";
+        };
+
+        // LPSPI1 总线节点定义
+        lpspi1: spi@400d4000 {
+            compatible = "nxp,lpspi";
+            reg = <0x400d4000 0x4000>;
+            interrupts = <17>;
+            status = "okay";
+        };
+
+        // LPI2C5 总线节点定义
+        lpi2c5: i2c@400f4000 {
+            compatible = "nxp,lpi2c";
+            reg = <0x400f4000 0x4000>;
+            interrupts = <101>;
+            status = "okay";
+        };
+
+        // FlexCAN3 控制器
+        flexcan3: can@400d4000 {
+            compatible = "nxp,flexcan";
+            reg = <0x400d4000 0x4000>;
+            interrupts = <54>;
+            status = "okay";
+        };
+
+        // USDHC1 控制器
+        usdhc1: sdhci@400b0000 {
+            compatible = "nxp,usdhc";
+            reg = <0x400b0000 0x40000>;
+            interrupts = <93>;
+            status = "okay";
+        };
+
+        // USB OTG1 控制器
+        usb1: usb@400d0000 {
+            compatible = "nxp,usb";
+            reg = <0x400d0000 0x40000>;
+            interrupts = <107>;
+            status = "okay";
+        };
+
+        // WDOG1 看门狗
+        wdog1: watchdog@400d8000 {
+            compatible = "nxp,wdog";
+            reg = <0x400d8000 0x4000>;
+            interrupts = <22>;
+            status = "okay";
+        };
+
+        // SAI1 音频接口
+        sai1: sai@400d0000 {
+            compatible = "nxp,sai";
+            reg = <0x400d0000 0x4000>;
+            interrupts = <30>;
+            status = "okay";
+        };
+
+        // LCDIF 显示控制器
+        lcdif: lcdif@400d0000 {
+            compatible = "nxp,lcdif";
+            reg = <0x400d0000 0x4000>;
+            interrupts = <39>;
+            status = "disabled";
+        };
+
+        // MIPI DSI 控制器
+        mipi_dsi: mipi-dsi@400d0000 {
+            compatible = "nxp,mipi-dsi";
+            reg = <0x400d0000 0x4000>;
+            interrupts = <40>;
+            status = "disabled";
+        };
+
+        // EDMA0 控制器
+        edma0: edma@400e8000 {
+            compatible = "nxp,edma";
+            reg = <0x400e8000 0x4000>;
+            status = "okay";
+        };
+    };
+
+    aliases {
+        console = &lpuart1;
+        serial0 = &lpuart1;
+        watchdog0 = &wdog1;
+        mipi-dsi = &mipi_dsi;
+    };
+};

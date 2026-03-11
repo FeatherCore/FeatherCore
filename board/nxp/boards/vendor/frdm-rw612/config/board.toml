@@ -1,45 +1,65 @@
 # FRDM-RW612 Board Configuration
+# FRDM-RW612 板级配置
+#
+# 基于 Zephyr 的 frdm-rw612 板级配置移植
 
 [board]
+# 开发板名称 / Board name
 name = "frdm-rw612"
+# 供应商 / Vendor
 vendor = "nxp"
+# 系列 / Family
 family = "rw612"
+# MCU 型号 / MCU model
 mcu = "rw612"
 
 [cpu]
+# CPU 内核类型 / CPU core type
 core = "cortex-m33"
+# CPU 频率 (Hz) / CPU frequency (Hz)
 frequency = 150000000
+# 是否支持浮点单元 / Whether to support floating point unit
 fpu = true
 
 [memory]
+# 内部 Flash 大小 (字节) / Internal Flash size (bytes)
 flash_size = 2097152
+# SRAM 大小 (字节) / SRAM size (bytes)
 sram_size = 640000
+# DTCM 大小 (字节) / DTCM size (bytes)
 dtcm_size = 128000
 
 [bootloader]
+# Bootloader 起始地址 / Bootloader start address
 boot_base_address = 0x00000000
+# Bootloader 大小 / Bootloader size
 boot_size = 0x10000  # 64KB
+# Bootloader 栈大小 / Bootloader stack size
 boot_stack_size = 0x2000   # 8KB
 
 [kernel]
+# Kernel 起始地址 / Kernel start address
 boot_base_address = 0x00010000
+# Kernel 大小 / Kernel size
 boot_size = 0x1F0000  # 1.9375MB
+# Kernel 启动栈大小 / Kernel boot stack size
 boot_stack_size = 0x4000   # 16KB
+# Kernel 堆大小 / Kernel heap size
 heap_size = 0x20000   # 128KB
 
 [pinout]
-# LED pins
+# LED pins (根据 FRDM-RW612 原理图)
 led1 = "PIO0_8"
 
-# UART pins
+# UART pins (默认使用 UART0)
 dbg_uart_tx = "PIO0_0"
 dbg_uart_rx = "PIO0_1"
 
-# SPI pins
+# SPI pins (使用 SPI1)
 spi1_sck = "PIO0_14"
 spi1_miso = "PIO0_15"
 spi1_mosi = "PIO0_16"
 
-# I2C pins
+# I2C pins (使用 I2C1)
 i2c1_scl = "PIO0_10"
 i2c1_sda = "PIO0_11"

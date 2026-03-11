@@ -672,26 +672,6 @@ fn generate_node_code(node: &DeviceTreeNode, code: &mut String, indent: usize) {
                     }
                     code.push_str("]))\n");
                 }
-                PropertyValue::StringArray(arr) => {
-                    code.push_str(&format!("PropertyValue::StringArray(vec!["));
-                    for (i, s) in arr.iter().enumerate() {
-                        if i > 0 {
-                            code.push_str(", ");
-                        }
-                        code.push_str(&format!("\"{}\"", s));
-                    }
-                    code.push_str("]))\n");
-                }
-                PropertyValue::Binary(arr) => {
-                    code.push_str(&format!("PropertyValue::Binary(vec!["));
-                    for (i, b) in arr.iter().enumerate() {
-                        if i > 0 {
-                            code.push_str(", ");
-                        }
-                        code.push_str(&b.to_string());
-                    }
-                    code.push_str("]))\n");
-                }
             }
             
             code.push_str(&format!("{}        }},\n", indent_str));

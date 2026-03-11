@@ -1,0 +1,215 @@
+// STM32U5A9J-DK Device Tree
+// STM32U5A9J-DK 设备树
+//
+// 基于 Zephyr 的 stm32u5a9j_dk 设备树配置移植
+
+/dts-v1/;
+
+/ {
+    model = "STMicroelectronics STM32U5A9J DISCOVERY KIT board";
+    compatible = "st,stm32u5a9j-dk";
+
+    // 内存定义
+    sram0: memory@20000000 {
+        device_type = "memory";
+        compatible = "mmio-sram";
+        reg = <0x20000000 0x80000>;
+    };
+
+    // LED 设备节点定义
+    leds {
+        compatible = "gpio-leds";
+
+        green_led_0: led_3 {
+            compatible = "gpio-leds";
+            gpios = <&gpioe 0 0>;
+            label = "User LD3";
+        };
+
+        red_led_0: led_4 {
+            compatible = "gpio-leds";
+            gpios = <&gpioe 1 0>;
+            label = "User LD4";
+        };
+    };
+
+    // GPIO 按键节点定义
+    gpio_keys {
+        compatible = "gpio-keys";
+
+        user_button: button_0 {
+            label = "User";
+            gpios = <&gpioc 13 0>;
+            zephyr,code = <0>;
+        };
+    };
+
+    // SoC 节点定义
+    soc {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        compatible = "st,stm32u5a9j";
+        ranges;
+
+        // GPIO 控制器
+        gpioa: gpio@50020000 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50020000 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpiob: gpio@50020400 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50020400 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpioc: gpio@50020800 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50020800 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpiod: gpio@50020c00 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50020c00 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpioe: gpio@50021000 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50021000 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpiof: gpio@50021400 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50021400 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpiog: gpio@50021800 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50021800 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpioh: gpio@50021c00 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50021c00 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        gpioi: gpio@50022000 {
+            compatible = "st,stm32-gpio";
+            reg = <0x50022000 0x400>;
+            clocks = <&rcc 0>;
+        };
+
+        // USART1 串口节点定义
+        usart1: serial@40013800 {
+            compatible = "st,stm32-usart";
+            reg = <0x40013800 0x400>;
+            interrupts = <27>;
+            status = "okay";
+        };
+
+        // LPUART1 串口节点定义
+        lpuart1: serial@4000ec00 {
+            compatible = "st,stm32-lpuart";
+            reg = <0x4000ec00 0x400>;
+            interrupts = <71>;
+            status = "okay";
+        };
+
+        // I2C1 总线节点定义
+        i2c1: i2c@40012100 {
+            compatible = "st,stm32-i2c";
+            reg = <0x40012100 0x400>;
+            interrupts = <47>;
+            status = "okay";
+        };
+
+        // I2C2 总线节点定义
+        i2c2: i2c@40012200 {
+            compatible = "st,stm32-i2c";
+            reg = <0x40012200 0x400>;
+            interrupts = <48>;
+            status = "okay";
+        };
+
+        // I2C6 总线节点定义
+        i2c6: i2c@40012700 {
+            compatible = "st,stm32-i2c";
+            reg = <0x40012700 0x400>;
+            interrupts = <95>;
+            status = "okay";
+        };
+
+        // SPI2 总线节点定义
+        spi2: spi@40013400 {
+            compatible = "st,stm32-spi";
+            reg = <0x40013400 0x400>;
+            interrupts = <36>;
+            status = "okay";
+        };
+
+        // SPI3 总线节点定义
+        spi3: spi@40013c00 {
+            compatible = "st,stm32-spi";
+            reg = <0x40013c00 0x400>;
+            interrupts = <39>;
+            status = "okay";
+        };
+
+        // SDMMC1 控制器
+        sdmmc1: sdmmc@480c4000 {
+            compatible = "st,stm32-sdmmc";
+            reg = <0x480c4000 0x1000>;
+            interrupts = <49>;
+            status = "disabled";
+        };
+
+        // ADC1 控制器
+        adc1: adc@48004000 {
+            compatible = "st,stm32-adc";
+            reg = <0x48004000 0x400>;
+            interrupts = <18>;
+            status = "disabled";
+        };
+
+        // USB OTG HS 控制器
+        usbotg_hs: usb@40000000 {
+            compatible = "st,stm32-otghs";
+            reg = <0x40000000 0x40000>;
+            interrupts = <98>;
+            status = "okay";
+        };
+
+        // RTC 控制器
+        rtc: rcc@44000000 {
+            compatible = "st,stm32u5-rcc";
+            reg = <0x44000000 0x1000>;
+        };
+
+        // IWDG 看门狗
+        iwdg: watchdog@40012000 {
+            compatible = "st,stm32-iwdg";
+            reg = <0x40012000 0x400>;
+        };
+
+        // RNG 随机数生成器
+        rng: rng@40012000 {
+            compatible = "st,stm32-rng";
+            reg = <0x40012000 0x400>;
+        };
+    };
+
+    aliases {
+        led0 = &green_led_0;
+        led1 = &red_led_0;
+        sw0 = &user_button;
+        console = &usart1;
+        serial0 = &usart1;
+    };
+};

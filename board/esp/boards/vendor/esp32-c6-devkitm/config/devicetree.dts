@@ -1,0 +1,100 @@
+// ESP32-C6-DevKitM Device Tree
+// ESP32-C6-DevKitM 设备树
+//
+// 基于 ESP32-C3 相似配置移植（Zephyr 中尚未完全支持 ESP32-C6）
+
+/dts-v1/;
+
+/ {
+    model = "Espressif ESP32C6-DevKitM";
+    compatible = "espressif,esp32c6";
+
+    // 内存定义
+    sram1: memory@3c000000 {
+        device_type = "memory";
+        reg = <0x3c000000 0x40000>;
+    };
+
+    // Flash
+    flash0: flash@0 {
+        compatible = "soc-nv-flash";
+        reg = <0x00000000 0x400000>;
+    };
+
+    // GPIO 按键节点定义
+    gpio_keys {
+        compatible = "gpio-keys";
+
+        user_button1: button_1 {
+            label = "User SW1";
+            status = "okay";
+        };
+    };
+
+    // SoC 节点定义
+    soc {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        compatible = "espressif,esp32c6";
+        ranges;
+
+        // GPIO 控制器
+        gpio0: gpio@3f404000 {
+            compatible = "espressif,gpio";
+            reg = <0x3f404000 0x400>;
+            status = "okay";
+        };
+
+        // UART0 串口节点定义
+        uart0: serial@3f401000 {
+            compatible = "espressif,uart";
+            reg = <0x3f401000 0x1000>;
+            interrupts = <22>;
+            status = "okay";
+            current-speed = <115200>;
+        };
+
+        // I2C0 总线节点定义
+        i2c0: i2c@3f403000 {
+            compatible = "espressif,i2c";
+            reg = <0x3f403000 0x1000>;
+            interrupts = <27>;
+            clock-frequency = <100000>;
+            status = "okay";
+        };
+
+        // SPI2 总线节点定义
+        spi2: spi@3f406000 {
+            compatible = "espressif,spi";
+            reg = <0x3f406000 0x1000>;
+            interrupts = <36>;
+            status = "okay";
+        };
+
+        // 看门狗
+        wdt0: watchdog@3f408000 {
+            compatible = "espressif,wdt";
+            reg = <0x3f408000 0x1000>;
+            status = "okay";
+        };
+
+        // WiFi 控制器
+        wifi: wifi@3c000000 {
+            compatible = "espressif,wifi";
+            reg = <0x3c000000 0x20000>;
+            status = "okay";
+        };
+
+        // 802.15.4 控制器 (Thread/Zigbee)
+        ieee802154: ieee802154@3c050000 {
+            compatible = "espressif,ieee802154";
+            reg = <0x3c050000 0x5000>;
+            status = "okay";
+        };
+    };
+
+    aliases {
+        console = &uart0;
+        serial0 = &uart0;
+    };
+};
