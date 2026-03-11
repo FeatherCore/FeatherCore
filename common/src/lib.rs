@@ -13,8 +13,6 @@
 
 // Enable alloc for String and Vec support
 // 启用 alloc 以支持 String 和 Vec
-#![feature(alloc)]
-
 extern crate alloc;
 use alloc::{string::String, vec::Vec};
 

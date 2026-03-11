@@ -6,8 +6,7 @@
 //! 此模块提供类似于 Linux 的设备树框架，允许板级配置以声明方式定义硬件设备及其连接。
 
 use core::fmt;
-use alloc::{string::String, vec::Vec, format};
-use alloc::string::ToString;
+use alloc::{string::{String, ToString}, vec::Vec, format};
 
 /// Device tree node
 /// 设备树节点
@@ -76,105 +75,172 @@ impl DeviceTreeParser {
         // 简单的 DTS 解析实现
         // 注意：这是一个简化版本，仅支持基本的 DTS 语法
         let mut root = DeviceTreeNode {
-            name: "".to_string(),
+            name: "root".to_string(),
             path: "/".to_string(),
             properties: Vec::new(),
             children: Vec::new(),
         };
         
-        let mut current_path = "/".to_string();
-        let mut current_node = &mut root;
-        let mut stack = Vec::new();
+        // 简单的解析逻辑，避免复杂的借用
+        // 这里使用一个简化的方法，只处理基本的节点和属性
+        let mut lines = dts.lines();
         
-        for line in dts.lines() {
+        // 跳过空行和注释
+        while let Some(line) = lines.next() {
             let line = line.trim();
             if line.is_empty() || line.starts_with("//") || line.starts_with("/*") || line.starts_with("*") {
                 continue;
             }
             
+            // 处理根节点
             if line.starts_with("/") && line.ends_with("{") {
-                // 根节点
                 let name = line.strip_suffix(" {").unwrap_or(&line).trim_start_matches("/");
-                root.name = if name.is_empty() { "root".to_string() } else { name.to_string() };
-            } else if line.starts_with("}") {
-                // 结束节点
-                if let Some(parent) = stack.pop() {
-                    current_node = parent;
-                    current_path = current_path.rsplit_once('/').unwrap_or(("", "/")).0.to_string();
-                    if current_path.is_empty() {
-                        current_path = "/".to_string();
+                if !name.is_empty() {
+                    root.name = name.to_string();
+                }
+                break;
+            }
+        }
+        
+        // 解析子节点和属性
+        let mut current_node = &mut root;
+        
+        // 这里使用一个简单的状态机来跟踪解析状态
+        // 0: 寻找节点或属性
+        // 1: 在节点内部
+        let mut state = 0;
+        
+        for line in lines {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with("//") || line.starts_with("/*") || line.starts_with("*") {
+                continue;
+            }
+            
+            match state {
+                0 => {
+                    if line.ends_with("{") {
+                        // 开始新节点
+                        let name = line.strip_suffix(" {").unwrap_or(&line);
+                        let node_name = name.split('@').next().unwrap_or(name).to_string();
+                        let node_path = format!("/{}", node_name);
+                        
+                        let new_node = DeviceTreeNode {
+                            name: node_name,
+                            path: node_path,
+                            properties: Vec::new(),
+                            children: Vec::new(),
+                        };
+                        
+                        current_node.children.push(new_node);
+                        state = 1;
+                    } else if line.contains("=") {
+                        // 属性
+                        let parts: Vec<&str> = line.split('=').collect();
+                        if parts.len() == 2 {
+                            let name = parts[0].trim().to_string();
+                            let value_str = parts[1].trim();
+                            
+                            let value = if value_str.starts_with('"') && value_str.ends_with('"') {
+                                PropertyValue::String(value_str.trim_matches('"').to_string())
+                            } else if value_str.starts_with('<') && value_str.ends_with('>') {
+                                let content = value_str.trim_matches(&['<', '>'][..]);
+                                let numbers: Vec<&str> = content.split_whitespace().collect();
+                                if numbers.len() == 1 {
+                                    if let Ok(num) = numbers[0].parse::<u64>() {
+                                        PropertyValue::Integer(num)
+                                    } else {
+                                        continue;
+                                    }
+                                } else {
+                                    let mut array = Vec::new();
+                                    for num_str in numbers {
+                                        if let Ok(num) = num_str.parse::<u64>() {
+                                            array.push(num);
+                                        }
+                                    }
+                                    PropertyValue::IntegerArray(array)
+                                }
+                            } else if value_str == "true" {
+                                PropertyValue::Boolean(true)
+                            } else if value_str == "false" {
+                                PropertyValue::Boolean(false)
+                            } else {
+                                PropertyValue::String(value_str.to_string())
+                            };
+                            
+                            current_node.properties.push(Property {
+                                name,
+                                value,
+                            });
+                        }
                     }
                 }
-            } else if line.ends_with("{") {
-                // 开始新节点
-                let name = line.strip_suffix(" {").unwrap_or(&line);
-                let node_name = name.split('@').next().unwrap_or(name).to_string();
-                let node_path = if current_path == "/" {
-                    format!("/{}", node_name)
-                } else {
-                    format!("{}/{}", current_path, node_name)
-                };
-                
-                let new_node = DeviceTreeNode {
-                    name: node_name,
-                    path: node_path.clone(),
-                    properties: Vec::new(),
-                    children: Vec::new(),
-                };
-                
-                stack.push(current_node);
-                current_node.children.push(new_node);
-                current_node = current_node.children.last_mut().unwrap();
-                current_path = node_path;
-            } else if line.contains("=") {
-                // 属性
-                let parts: Vec<&str> = line.split('=').collect();
-                if parts.len() != 2 {
-                    continue;
-                }
-                
-                let name = parts[0].trim().to_string();
-                let value_str = parts[1].trim();
-                
-                let value = if value_str.starts_with('"') && value_str.ends_with('"') {
-                    // 字符串
-                    PropertyValue::String(value_str.trim_matches('"').to_string())
-                } else if value_str.starts_with('<') && value_str.ends_with('>') {
-                    // 整数或整数数组
-                    let content = value_str.trim_matches(&['<', '>'][..]);
-                    let numbers: Vec<&str> = content.split_whitespace().collect();
-                    if numbers.len() == 1 {
-                        // 单个整数
-                        if let Ok(num) = numbers[0].parse::<u64>() {
-                            PropertyValue::Integer(num)
+                1 => {
+                    if line.starts_with("}") {
+                        // 结束节点
+                        state = 0;
+                    } else if line.ends_with("{") {
+                        // 子节点
+                        let name = line.strip_suffix(" {").unwrap_or(&line);
+                        let node_name = name.split('@').next().unwrap_or(name).to_string();
+                        let parent_path = current_node.path.clone();
+                        let node_path = if parent_path == "/" {
+                            format!("/{}", node_name)
                         } else {
-                            continue;
+                            format!("{}/{}", parent_path, node_name)
+                        };
+                        
+                        let new_node = DeviceTreeNode {
+                            name: node_name,
+                            path: node_path,
+                            properties: Vec::new(),
+                            children: Vec::new(),
+                        };
+                        
+                        current_node.children.push(new_node);
+                    } else if line.contains("=") {
+                        // 属性
+                        let parts: Vec<&str> = line.split('=').collect();
+                        if parts.len() == 2 {
+                            let name = parts[0].trim().to_string();
+                            let value_str = parts[1].trim();
+                            
+                            let value = if value_str.starts_with('"') && value_str.ends_with('"') {
+                                PropertyValue::String(value_str.trim_matches('"').to_string())
+                            } else if value_str.starts_with('<') && value_str.ends_with('>') {
+                                let content = value_str.trim_matches(&['<', '>'][..]);
+                                let numbers: Vec<&str> = content.split_whitespace().collect();
+                                if numbers.len() == 1 {
+                                    if let Ok(num) = numbers[0].parse::<u64>() {
+                                        PropertyValue::Integer(num)
+                                    } else {
+                                        continue;
+                                    }
+                                } else {
+                                    let mut array = Vec::new();
+                                    for num_str in numbers {
+                                        if let Ok(num) = num_str.parse::<u64>() {
+                                            array.push(num);
+                                        }
+                                    }
+                                    PropertyValue::IntegerArray(array)
+                                }
+                            } else if value_str == "true" {
+                                PropertyValue::Boolean(true)
+                            } else if value_str == "false" {
+                                PropertyValue::Boolean(false)
+                            } else {
+                                PropertyValue::String(value_str.to_string())
+                            };
+                            
+                            current_node.properties.push(Property {
+                                name,
+                                value,
+                            });
                         }
-                    } else {
-                        // 整数数组
-                        let mut array = Vec::new();
-                        for num_str in numbers {
-                            if let Ok(num) = num_str.parse::<u64>() {
-                                array.push(num);
-                            }
-                        }
-                        PropertyValue::IntegerArray(array)
                     }
-                } else if value_str == "true" {
-                    // 布尔值 true
-                    PropertyValue::Boolean(true)
-                } else if value_str == "false" {
-                    // 布尔值 false
-                    PropertyValue::Boolean(false)
-                } else {
-                    // 其他类型，暂时作为字符串处理
-                    PropertyValue::String(value_str.to_string())
-                };
-                
-                current_node.properties.push(Property {
-                    name,
-                    value,
-                });
+                }
+                _ => {}
             }
         }
         
@@ -213,7 +279,7 @@ impl DeviceTreeManager {
     
     /// Recursive node search
     /// 递归节点搜索
-    fn find_node_recursive(&self, node: &DeviceTreeNode, path: &str) -> Option<&DeviceTreeNode> {
+    fn find_node_recursive<'a>(&'a self, node: &'a DeviceTreeNode, path: &str) -> Option<&'a DeviceTreeNode> {
         if node.path == path {
             return Some(node);
         }

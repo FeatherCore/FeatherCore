@@ -5,6 +5,7 @@
 //! 此模块提供了一个可以绑定到设备树节点的 LED 驱动。
 
 use crate::devicetree::{DeviceTreeNode, DriverBind};
+use alloc::string::{String, ToString};
 
 /// LED driver
 /// LED 驱动
@@ -26,7 +27,7 @@ impl LedDriver {
     pub fn on(&self) {
         // TODO: Implement GPIO control
         // TODO: 实现 GPIO 控制
-        println!("Turning on LED on port {} pin {}", self.port, self.pin);
+        // println!("Turning on LED on port {} pin {}", self.port, self.pin);
     }
     
     /// Turn off the LED
@@ -34,7 +35,7 @@ impl LedDriver {
     pub fn off(&self) {
         // TODO: Implement GPIO control
         // TODO: 实现 GPIO 控制
-        println!("Turning off LED on port {} pin {}", self.port, self.pin);
+        // println!("Turning off LED on port {} pin {}", self.port, self.pin);
     }
     
     /// Toggle the LED
@@ -42,7 +43,7 @@ impl LedDriver {
     pub fn toggle(&self) {
         // TODO: Implement GPIO control
         // TODO: 实现 GPIO 控制
-        println!("Toggling LED on port {} pin {}", self.port, self.pin);
+        // println!("Toggling LED on port {} pin {}", self.port, self.pin);
     }
 }
 

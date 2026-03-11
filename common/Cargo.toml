@@ -38,6 +38,7 @@ mm = []         # Enable memory management
 sync = []       # Enable synchronization primitives
 driver = []     # Enable driver framework
 fs = []         # Enable filesystem framework
+devicetree = [] # Enable device tree support
 
 [profile.dev]
 opt-level = 1
