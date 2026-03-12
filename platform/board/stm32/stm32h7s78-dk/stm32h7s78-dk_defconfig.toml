@@ -6,70 +6,12 @@
 chip = "stm32h7rs"
 
 [board]
-# 开发板名称 / Board name
 name = "stm32h7s78-dk"
-# 完整名称 / Full name
 full_name = "STMicroelectronics STM32H7S78 Discovery Kit"
-# 供应商 / Vendor
 vendor = "st"
-# 系列 / Family
 family = "stm32h7"
-# MCU 型号 / MCU model
 mcu = "stm32h7s78"
 
-[cpu]
-# CPU 内核类型 / CPU core type
-core = "cortex-m7"
-# CPU 频率 (Hz) / CPU frequency (Hz)
-frequency = 280000000
-# 是否支持浮点单元 / Whether to support floating point unit
-fpu = true
-
-[memory]
-# 内部 Flash 大小 (字节) / Internal Flash size (bytes)
-# Flash: 64KB (内部 Flash)
-flash_size = 65536
-# SRAM 大小 (字节) / SRAM size (bytes)
-# SRAM: 456KB 总大小
-sram_size = 466944
-# DTCM 大小 (字节) / DTCM size (bytes)
-# DTCM: 128KB
-dtcm_size = 131072
-# SRAM1 大小 (字节) / SRAM1 size (bytes)
-# SRAM1: 512KB
-sram1_size = 524288
-# SRAM2 大小 (字节) / SRAM2 size (bytes)
-# SRAM2: 256KB
-sram2_size = 262144
-# SRAM3 大小 (字节) / SRAM3 size (bytes)
-# SRAM3: 64KB
-sram3_size = 65536
-# SRAM4 大小 (字节) / SRAM4 size (bytes)
-# SRAM4: 32KB
-sram4_size = 32768
-# 外部 Flash 大小 (字节) / External Flash size (bytes)
-# 外部 Flash: 128MB (OctoSPI)
-ext_flash_size = 134217728
-
-[bootloader]
-# Bootloader 起始地址 / Bootloader start address
-boot_base_address = 0x08000000
-# Bootloader 大小 / Bootloader size
-boot_size = 0x10000  # 64KB
-# Bootloader 栈大小 / Bootloader stack size
-boot_stack_size = 0x2000   # 8KB
-
-[kernel]
-# Kernel 起始地址 / Kernel start address
-kernel_base_address = 0x08010000
-# Kernel 大小 / Kernel size
-kernel_size = 0x1F0000  # 1.9375MB
-# Kernel 启动栈大小 / Kernel boot stack size
-kernel_boot_stack_size = 0x4000   # 16KB
-# Kernel 堆大小 / Kernel heap size
-kernel_heap_size = 0x20000   # 128KB
-
-# 支持的外设 / Supported peripherals
 [supported]
 arduino_gpio = true
 gpio = true
@@ -81,7 +23,6 @@ octospi = true
 usbd = true
 memc = true
 
-# 默认配置 / Default configuration
 [config]
 arm_mpu = true
 hw_stack_protection = true
@@ -90,21 +31,10 @@ console = true
 uart_console = true
 
 [pinout]
-# LED pins (根据 STM32H7S78-DK 原理图)
-# LED 引脚配置 / LED pins configuration
-# LD1: PD13
 led1 = "PD13"
-
-# 用户按钮 / User button
 user_button = "PC13"
-
-# UART pins (使用 LPUART1)
-# UART 引脚配置 / UART pins configuration
 dbg_uart_tx = "PG7"
 dbg_uart_rx = "PG8"
-
-# OctoSPI pins
-# OctoSPI 引脚配置 / OctoSPI pins configuration
 octospi1_io0 = "PD11"
 octospi1_io1 = "PD12"
 octospi1_io2 = "PD13"
@@ -115,8 +45,5 @@ octospi1_io6 = "PG9"
 octospi1_io7 = "PG10"
 octospi1_sck = "PD10"
 octospi1_ncs = "PG12"
-
-# I2C pins (使用 I2C4)
-# I2C 引脚配置 / I2C pins configuration
 i2c4_scl = "PF14"
 i2c4_sda = "PF15"

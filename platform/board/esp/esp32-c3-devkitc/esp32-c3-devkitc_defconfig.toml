@@ -6,62 +6,17 @@
 chip = "esp32c3"
 
 [board]
-# 开发板名称 / Board name
 name = "esp32-c3-devkitc"
-# 供应商 / Vendor
 vendor = "espressif"
-# 系列 / Family
 family = "esp32-c3"
-# MCU 型号 / MCU model
 mcu = "esp32-c3"
 
-[cpu]
-# CPU 内核类型 / CPU core type
-core = "riscv32"
-# CPU 频率 (Hz) / CPU frequency (Hz)
-frequency = 160000000
-# 是否支持浮点单元 / Whether to support floating point unit
-fpu = false
-
-[memory]
-# 内部 Flash 大小 (字节) / Internal Flash size (bytes)
-flash_size = 4194304
-# SRAM 大小 (字节) / SRAM size (bytes)
-sram_size = 400000
-# PSRAM 大小 (字节) / PSRAM size (bytes)
-psram_size = 0
-
-[bootloader]
-# Bootloader 起始地址 / Bootloader start address
-boot_base_address = 0x42000000
-# Bootloader 大小 / Bootloader size
-boot_size = 0x10000  # 64KB
-# Bootloader 栈大小 / Bootloader stack size
-boot_stack_size = 0x2000   # 8KB
-
-[kernel]
-# Kernel 起始地址 / Kernel start address
-boot_base_address = 0x42010000
-# Kernel 大小 / Kernel size
-boot_size = 0x3F0000  # 3.9375MB
-# Kernel 启动栈大小 / Kernel boot stack size
-boot_stack_size = 0x4000   # 16KB
-# Kernel 堆大小 / Kernel heap size
-heap_size = 0x20000   # 128KB
-
 [pinout]
-# LED pins (根据 ESP32-C3-DevKitC 原理图)
 led1 = "GPIO8"
-
-# UART pins (默认使用 UART0)
 dbg_uart_tx = "GPIO21"
 dbg_uart_rx = "GPIO20"
-
-# SPI pins (使用 SPI2)
 spi1_sck = "GPIO6"
 spi1_miso = "GPIO7"
 spi1_mosi = "GPIO8"
-
-# I2C pins (使用 I2C0)
 i2c1_scl = "GPIO10"
 i2c1_sda = "GPIO11"
