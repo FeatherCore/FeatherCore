@@ -37,10 +37,24 @@ armv9-a = ["arm", "feathercore-common/armv9-a"]
 # RISC-V architecture
 riscv = ["feathercore-common/riscv"]
 
-# Board-specific features
+# Board-specific features (STM32)
 stm32f429i-disc = ["armv7-em"]
+stm32h7s78-dk = ["armv7-em"]
 stm32n6570-dk = ["armv8-m-main"]
+stm32u5a9j-dk = ["armv8-m-main"]
+stm32u5g9j-dk1 = ["armv8-m-main"]
+
+# Board-specific features (ESP32)
+esp32-c3-devkitc = ["riscv"]
+esp32-c5-devkitc = ["riscv"]
+esp32-c6-devkitm = ["riscv"]
+
+# Board-specific features (NXP)
 mimxrt1170-evkb = ["armv7-m"]
+frdm-rw612 = ["armv8-m-main"]
+
+# Board-specific features (Renesas)
+ek-ra8p1 = ["armv8-m-main"]
 
 [profile.dev]
 opt-level = 1
@@ -50,33 +64,3 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 panic = "abort"
-
-[target.thumbv7em-none-eabihf]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]
-
-[target.thumbv8m.main-none-eabihf]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]
-
-[target.thumbv7m-none-eabi]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]
-
-[target.thumbv8m.base-none-eabi]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]
-
-[target.riscv32imac-unknown-none-elf]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]
-
-[target.riscv64imac-unknown-none-elf]
-rustflags = [
-    "-C", "link-arg=-Tlink.x"
-]

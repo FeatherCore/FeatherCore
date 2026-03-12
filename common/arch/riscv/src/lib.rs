@@ -77,9 +77,7 @@ pub mod startup {
         default_handler as usize, // Machine software interrupt
         default_handler as usize, // Machine timer interrupt
         default_handler as usize, // Machine external interrupt
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Reserved
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Reserved
-        0, 0, 0, 0, // Reserved
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Reserved (27 entries to make 32 total)
     ];
     
     /// Reset handler - entry point for RISC-V

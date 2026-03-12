@@ -10,9 +10,10 @@
 #![no_std]
 #![deny(missing_docs)]
 
-// Enable alloc for String and Vec support
-// 启用 alloc 以支持 String 和 Vec
+// Enable alloc for dynamic memory allocation support
+// 启用 alloc 以支持动态内存分配
 extern crate alloc;
+#[allow(unused_imports)]
 use alloc::{string::String, vec::Vec};
 
 // Re-export architecture modules if features are enabled
