@@ -3,7 +3,7 @@
 #
 # 与 STM32U5A9J-DK 相同的配置，主控型号不同
 
-chip = "stm32n6"
+chip = "stm32u5"
 
 [board]
 # 开发板名称 / Board name

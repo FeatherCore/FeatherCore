@@ -3,7 +3,7 @@
 #
 # 基于 Zephyr 的 stm32u5a9j_dk 板级配置移植
 
-chip = "stm32n6"
+chip = "stm32u5"
 
 [board]
 name = "stm32u5a9j-dk"
