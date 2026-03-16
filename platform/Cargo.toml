@@ -1,0 +1,31 @@
+[package]
+name = "feathercore-platform"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FeatherCore platform support (meta-crate)"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+feathercore-platform-board = { path = "board" }
+feathercore-platform-chip = { path = "chip" }
+
+[features]
+default = []
+
+# Board features
+board-stm32f429i-disc = ["feathercore-platform-board/stm32f429i-disc"]
+board-stm32h7s78-dk = ["feathercore-platform-board/stm32h7s78-dk"]
+board-stm32n6570-dk = ["feathercore-platform-board/stm32n6570-dk"]
+
+# Chip features
+chip-stm32f4 = ["feathercore-platform-chip/chip-stm32f4"]
+chip-stm32h7rs = ["feathercore-platform-chip/chip-stm32h7rs"]
+chip-stm32n6 = ["feathercore-platform-chip/chip-stm32n6"]
+
+# Convenience features (board + corresponding chip)
+stm32f429i-disc = ["board-stm32f429i-disc", "chip-stm32f4"]
+stm32h7s78-dk = ["board-stm32h7s78-dk", "chip-stm32h7rs"]
+stm32n6570-dk = ["board-stm32n6570-dk", "chip-stm32n6"]
