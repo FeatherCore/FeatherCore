@@ -90,12 +90,6 @@ pub fn generate_config(board_name: &str) {
     let root_path = PathBuf::from(&root);
     fs::create_dir_all(root_path.join("boot")).unwrap_or_default();
     fs::create_dir_all(root_path.join("kernel")).unwrap_or_default();
-    fs::create_dir_all(root_path.join("common/generated/src")).unwrap_or_default();
-    
-    // Ensure output directories exist
-    let root_path = PathBuf::from(&root);
-    fs::create_dir_all(root_path.join("boot")).unwrap_or_default();
-    fs::create_dir_all(root_path.join("kernel")).unwrap_or_default();
     
     // Get architecture from board config
     let arch = config::get_target_arch(&board_config.cpu_core);

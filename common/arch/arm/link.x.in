@@ -1,5 +1,6 @@
 /* Linker script for ARM Cortex-M
  * Based on cortex-m-rt link.x.in
+ * Variables marked with @VAR@ will be replaced by build_tool
  */
 
 MEMORY
@@ -13,53 +14,67 @@ REGION_ALIAS("REGION_RODATA", FLASH);
 REGION_ALIAS("REGION_DATA", RAM);
 REGION_ALIAS("REGION_BSS", RAM);
 
+EXTERN(__RESET_VECTOR);
+EXTERN(Reset);
+ENTRY(Reset);
+
 SECTIONS
 {
-  .vector_table ORIGIN(FLASH) :
+  .vector_table ORIGIN(FLASH) : ALIGN(4)
   {
-    KEEP(*(.vector_table))
+    __vector_table_start = .;
+    KEEP(*(.vector_table));
+    . = ALIGN(4);
+    __vector_table_end = .;
   } > FLASH
 
-  .text :
+  .text _stext : ALIGN(4)
   {
-    *(.text)
-    *(.text.*)
-    *(.rodata)
-    *(.rodata.*)
+    __stext = .;
+    *(.text .text.*);
+    *(.rodata .rodata.*);
+    . = ALIGN(4);
+    __etext = .;
   } > REGION_TEXT
 
-  .data :
+  .data : ALIGN(4)
   {
-    _sdata = .;
-    *(.data)
-    *(.data.*)
-    _edata = .;
+    __sdata = .;
+    *(.data .data.*);
+    . = ALIGN(4);
+    __edata = .;
   } > REGION_DATA AT > REGION_RODATA
 
-  .bss :
+  .bss : ALIGN(4)
   {
-    _sbss = .;
-    *(.bss)
-    *(.bss.*)
-    *(COMMON)
-    _ebss = .;
+    __sbss = .;
+    *(.bss .bss.*);
+    *(COMMON);
+    . = ALIGN(4);
+    __ebss = .;
   } > REGION_BSS
 
-  .stack (NOLOAD) :
+  .stack (NOLOAD) : ALIGN(8)
   {
-    . = ALIGN(8);
-    _stack_top = .;
+    __stack_start = .;
     . += @STACK_SIZE@;
-    _stack_bottom = .;
+    __stack_end = .;
   } > REGION_BSS
 
-  .heap (NOLOAD) :
+  .heap (NOLOAD) : ALIGN(8)
   {
-    . = ALIGN(8);
-    _heap_start = .;
+    __heap_start = .;
     . += @HEAP_SIZE@;
-    _heap_end = .;
+    __heap_end = .;
   } > REGION_BSS
+
+  /DISCARD/ :
+  {
+    libc.a(*)
+    libm.a(*)
+    libgcc.a(*)
+  }
 }
 
 PROVIDE(_sidata = LOADADDR(.data));
+PROVIDE(__RESET_VECTOR = __vector_table_start);

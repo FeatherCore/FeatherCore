@@ -1,0 +1,293 @@
+# FeatherCore 通用 Boot 架构设计
+
+## 设计理念
+
+### 核心原则
+
+1. **boot/ 完全通用** - 不绑定任何特定平台
+2. **设备树驱动** - 所有硬件信息来自设备树
+3. **架构模板化** - 各架构有标准链接脚本模板
+4. **自动生成代码** - build_tool 根据配置生成具体代码
+
+## 架构层次
+
+```
+┌─────────────────────────────────────────┐
+│  boot/src/main.rs                       │  ← 完全通用的 boot 代码
+│  - 使用 generated 库的信息              │
+│  - 不直接引用任何平台特定代码           │
+└─────────────────────────────────────────┘
+                ↓
+┌─────────────────────────────────────────┐
+│  common/generated/                      │  ← 自动生成的代码
+│  - devicetree.rs (从设备树生成)         │
+│  - chip.rs (从板级配置生成)             │
+└─────────────────────────────────────────┘
+                ↓
+┌─────────────────────────────────────────┐
+│  common/arch/                           │  ← 架构支持
+│  - templates/linker_*.x (链接脚本模板)  │
+│  - arm/, riscv/ (架构特定代码)          │
+└─────────────────────────────────────────┘
+                ↓
+┌─────────────────────────────────────────┐
+│  platform/board/                        │  ← 板级配置
+│  - stm32/stm32f429i-disc/               │
+│  - 设备树文件 (.dts)                    │
+│  - 板级配置文件 (.toml)                 │
+└─────────────────────────────────────────┘
+```
+
+## 构建流程
+
+### 1. 解析设备树
+
+```rust
+// build_tool/src/device_tree.rs
+use common::generated::device_tree;
+
+let dts_path = "platform/board/stm32/stm32f429i-disc/stm32f429i-disc.dts";
+let info = device_tree::parse_dts_file(&dts_path)?;
+
+// 生成 Rust 代码
+let rust_code = device_tree::generate_device_tree_rust(&info);
+```
+
+### 2. 生成链接脚本
+
+```rust
+// build_tool/src/linker.rs
+use common::arch::linker_template;
+
+// 读取架构模板
+let template = linker_template::get_template("arm_cortex_m");
+
+// 替换变量
+let linker_script = template
+    .replace("__FLASH_ORIGIN__", &format!("0x{:08X}", flash_base))
+    .replace("__FLASH_LENGTH__", &format!("{}", flash_size))
+    .replace("__RAM_ORIGIN__", &format!("0x{:08X}", ram_base))
+    .replace("__RAM_LENGTH__", &format!("{}", ram_size))
+    .replace("__MIN_STACK_SIZE__", &format!("{}", stack_size))
+    .replace("__MIN_HEAP_SIZE__", &format!("{}", heap_size));
+```
+
+### 3. 生成代码
+
+```rust
+// build_tool/src/generate.rs
+
+// 生成设备树代码
+std::fs::write(
+    "common/generated/src/generated/devicetree.rs",
+    device_tree_rust_code
+)?;
+
+// 生成芯片特定代码
+std::fs::write(
+    "common/generated/src/generated/chip.rs",
+    chip_specific_code
+)?;
+
+// 生成链接脚本
+std::fs::write(
+    "boot/link.x",
+    linker_script
+)?;
+```
+
+### 4. 编译
+
+```bash
+# 使用生成的链接脚本编译
+cargo build --manifest-path boot/Cargo.toml \
+  --target thumbv7em-none-eabihf \
+  --release
+```
+
+## 设备树示例
+
+### STM32F429I-DISC 设备树
+
+```dts
+/dts-v1/;
+
+/ {
+    compatible = "st,stm32f429i-disco";
+    model = "STM32F429I Discovery";
+    cpu-frequency = <168000000>;
+    
+    memory {
+        flash@08000000 {
+            reg = <0x08000000 0x200000>;  /* 2MB Flash */
+        };
+        
+        ram@20000000 {
+            reg = <0x20000000 0x30000>;  /* 192KB SRAM */
+        };
+    };
+    
+    boot {
+        flash-base = <0x08000000>;
+        flash-size = <0x40000>;  /* Boot: 256KB */
+    };
+    
+    kernel {
+        flash-base = <0x08040000>;
+        flash-size = <0x100000>;  /* Kernel: 1MB */
+        ram-base = <0x20000000>;
+        ram-size = <0x20000>;     /* Kernel RAM: 128KB */
+    };
+    
+    peripheral@40021000 {
+        compatible = "st,stm32f4-gpio";
+        reg = <0x40021000 0x400>;
+        interrupts = <0>;
+    };
+    
+    peripheral@40011000 {
+        compatible = "st,stm32f4-usart";
+        reg = <0x40011000 0x400>;
+        interrupts = <37>;
+    };
+};
+```
+
+### 生成的 Rust 代码
+
+```rust
+// common/generated/src/generated/devicetree.rs
+//! Auto-generated Device Tree Code
+//! Board: STM32F429I Discovery
+
+#![no_std]
+
+pub mod board {
+    pub const MODEL: &str = "STM32F429I Discovery";
+    pub const COMPATIBLE: &str = "st,stm32f429i-disco";
+    pub const CPU_FREQ_HZ: u32 = 168000000;
+}
+
+pub mod memory {
+    pub const FLASH_BASE: u32 = 0x08000000;
+    pub const FLASH_SIZE: u32 = 0x200000;
+    pub const RAM_BASE: u32 = 0x20000000;
+    pub const RAM_SIZE: u32 = 0x30000;
+    
+    pub const KERNEL_FLASH_BASE: u32 = 0x08040000;
+    pub const KERNEL_RAM_BASE: u32 = 0x20000000;
+    pub const KERNEL_SIZE: usize = 0x20000;
+}
+
+pub mod peripherals {
+    pub struct Peripheral {
+        pub name: &'static str,
+        pub compatible: &'static str,
+        pub base: u32,
+        pub size: u32,
+    }
+    
+    pub const GPIOA: Peripheral = Peripheral {
+        name: "gpioa",
+        compatible: "st,stm32f4-gpio",
+        base: 0x40021000,
+        size: 0x400,
+    };
+    
+    pub const USART1: Peripheral = Peripheral {
+        name: "usart1",
+        compatible: "st,stm32f4-usart",
+        base: 0x40011000,
+        size: 0x400,
+    };
+    
+    pub const UART_PERIPHERALS: &[Peripheral] = &[USART1];
+}
+```
+
+### 生成的链接脚本
+
+```ld
+/* boot/link.x - Generated by feathercore-build */
+ENTRY(_start)
+
+MEMORY
+{
+    FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 2048K
+    RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 192K
+}
+
+__MIN_STACK_SIZE__ = 0x2000;
+__MIN_HEAP_SIZE__ = 0x2000;
+
+SECTIONS
+{
+    .isr_vector : { ... } >FLASH
+    .text : { ... } >FLASH
+    .data : { ... } >RAM AT> FLASH
+    .bss : { ... } >RAM
+}
+```
+
+## 通用 Boot 流程
+
+```rust
+// boot/src/main.rs
+
+#[no_mangle]
+pub extern "C" fn boot_main() -> ! {
+    // 1. 打印信息（来自设备树）
+    println!("Board: {}", generated::board::MODEL);
+    println!("Flash: 0x{:08X}", generated::memory::FLASH_BASE);
+    
+    // 2. 硬件初始化（使用设备树信息）
+    hardware_init();
+    
+    // 3. 加载内核（位置来自设备树）
+    load_kernel();
+    
+    // 4. 跳转到内核
+    jump_to_kernel();
+}
+```
+
+## 多平台支持
+
+### 添加新平台步骤
+
+1. **创建设备树文件**
+   ```bash
+   platform/board/vendor/board-name/board-name.dts
+   ```
+
+2. **创建板级配置**
+   ```bash
+   platform/board/vendor/board-name/board-name_defconfig.toml
+   ```
+
+3. **自动生成代码**
+   ```bash
+   feathercore-build generate board-name
+   ```
+
+4. **编译**
+   ```bash
+   feathercore-build build board-name boot
+   ```
+
+## 优势
+
+1. **真正的通用代码** - boot/src/main.rs 不绑定任何平台
+2. **设备树驱动** - 所有硬件信息可配置
+3. **架构模板化** - ARM、RISC-V 各有标准模板
+4. **易于扩展** - 添加新平台只需设备树和配置
+5. **自动化** - 代码生成全自动，无需手动修改
+
+## 总结
+
+这个设计实现了：
+- ✅ boot/ 完全通用，适用于所有平台
+- ✅ 设备树提供完整硬件信息
+- ✅ 架构模板支持 ARM 和 RISC-V
+- ✅ build_tool 自动生成所有代码
+- ✅ 易于添加新平台

@@ -12,6 +12,9 @@ pub mod time;
 pub mod sync;
 pub mod log;
 pub mod future;
+pub mod syscall;
+pub mod vfs;
+pub mod driver;
 
 // Log macros are automatically exported at crate root due to #[macro_export]
 
@@ -30,6 +33,12 @@ pub fn init() {
     
     // Initialize scheduler
     sched::init();
+    
+    // Initialize VFS
+    vfs::init();
+    
+    // Initialize syscall interface
+    syscall::init();
     
     info!("FeatherCore RTOS Initialized");
 }
