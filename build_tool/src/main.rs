@@ -33,7 +33,6 @@ use std::env;
 mod root_path;
 mod config;
 mod device_tree;
-mod linker;
 mod build;
 mod utils;
 

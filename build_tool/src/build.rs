@@ -9,7 +9,6 @@ use std::process::Command;
 
 use crate::config;
 use crate::device_tree;
-use crate::linker;
 use crate::root_path;
 use crate::utils;
 
@@ -93,30 +92,61 @@ pub fn generate_config(board_name: &str) {
     fs::create_dir_all(root_path.join("kernel")).unwrap_or_default();
     fs::create_dir_all(root_path.join("common/generated/src")).unwrap_or_default();
     
-    // Generate linker scripts
-    let boot_link_path = root_path.join("boot/link.x");
-    let kernel_link_path = root_path.join("kernel/link.x");
-    let common_dt_path = root_path.join("common/generated/src/devicetree.rs");
+    // Ensure output directories exist
+    let root_path = PathBuf::from(&root);
+    fs::create_dir_all(root_path.join("boot")).unwrap_or_default();
+    fs::create_dir_all(root_path.join("kernel")).unwrap_or_default();
     
-    let boot_script = linker::generate_boot_linker_script(&board_config);
-    let kernel_script = linker::generate_kernel_linker_script(&board_config);
+    // Get architecture from board config
+    let arch = config::get_target_arch(&board_config.cpu_core);
+    let arch_name = if arch.contains("riscv") { "riscv" } else { "arm" };
     
-    fs::write(&boot_link_path, &boot_script).unwrap_or_default();
-    fs::write(&kernel_link_path, &kernel_script).unwrap_or_default();
+    // Generate linker scripts using templates
+    let template_path = root_path.join("common").join("arch").join(arch_name).join("link.x.in");
     
-    println!("Generated linker scripts:");
-    println!("  - {}", boot_link_path.display());
-    println!("  - {}", kernel_link_path.display());
-    
-    // Generate device tree
-    if let Some(dts_path) = device_tree::find_device_tree_file(board_name) {
-        if let Ok(dts_content) = fs::read_to_string(&dts_path) {
-            if let Ok(device_tree_info) = device_tree::generate_device_tree_info(&dts_content) {
-                fs::write(&common_dt_path, &device_tree_info).unwrap_or_default();
-                println!("Generated device tree:");
-                println!("  - {}", common_dt_path.display());
+    if template_path.exists() {
+        println!("Using linker template: {:?}", template_path);
+        
+        let boot_link_path = root_path.join("boot/link.x");
+        let kernel_link_path = root_path.join("kernel/link.x");
+        
+        // Use device_tree module to generate linker scripts
+        if let Some(dts_path) = device_tree::find_device_tree_file(&root_path, board_name) {
+            // Generate boot linker script
+            match device_tree::generate_linker_script(
+                &dts_path,
+                arch_name,
+                &template_path,
+                &boot_link_path,
+                board_config.kernel_stack_size as u32,
+                board_config.kernel_heap_size as u32,
+            ) {
+                Ok(_) => println!("Generated boot linker script: {:?}", boot_link_path),
+                Err(e) => utils::print_error(&format!("Failed to generate boot linker script: {}", e)),
+            }
+            
+            // Generate kernel linker script
+            match device_tree::generate_linker_script(
+                &dts_path,
+                arch_name,
+                &template_path,
+                &kernel_link_path,
+                board_config.kernel_stack_size as u32,
+                board_config.kernel_heap_size as u32,
+            ) {
+                Ok(_) => println!("Generated kernel linker script: {:?}", kernel_link_path),
+                Err(e) => utils::print_error(&format!("Failed to generate kernel linker script: {}", e)),
+            }
+            
+            // Generate device tree code for common/generated/devicetree
+            let generated_dt_path = root_path.join("common/generated/devicetree/mod.rs");
+            match device_tree::parse_and_generate_simple(&dts_path, &generated_dt_path) {
+                Ok(_) => println!("Generated device tree code: {:?}", generated_dt_path),
+                Err(e) => utils::print_error(&format!("Failed to generate device tree code: {}", e)),
             }
         }
+    } else {
+        utils::print_error(&format!("Linker template not found: {:?}", template_path));
     }
     
     println!("Configuration generated successfully!");
