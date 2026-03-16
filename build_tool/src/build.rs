@@ -104,37 +104,26 @@ pub fn generate_config(board_name: &str) {
         let boot_link_path = root_path.join("boot/link.x");
         let kernel_link_path = root_path.join("kernel/link.x");
         
-        // Use device_tree module to generate linker scripts
-        if let Some(dts_path) = device_tree::find_device_tree_file(&root_path, board_name) {
-            // Generate boot linker script
-            match device_tree::generate_linker_script(
-                &dts_path,
-                arch_name,
-                &template_path,
-                &boot_link_path,
-                board_config.kernel_stack_size as u32,
-                board_config.kernel_heap_size as u32,
-            ) {
-                Ok(_) => println!("Generated boot linker script: {:?}", boot_link_path),
-                Err(e) => utils::print_error(&format!("Failed to generate boot linker script: {}", e)),
-            }
-            
-            // Generate kernel linker script
-            match device_tree::generate_linker_script(
-                &dts_path,
-                arch_name,
-                &template_path,
-                &kernel_link_path,
-                board_config.kernel_stack_size as u32,
-                board_config.kernel_heap_size as u32,
-            ) {
-                Ok(_) => println!("Generated kernel linker script: {:?}", kernel_link_path),
-                Err(e) => utils::print_error(&format!("Failed to generate kernel linker script: {}", e)),
-            }
-            
-            // Generate device tree code for common/generated/devicetree
+        // Use linker module to generate linker scripts
+        let boot_linker_script = crate::linker::generate_boot_linker_script(&board_config);
+        let kernel_linker_script = crate::linker::generate_kernel_linker_script(&board_config);
+        
+        // Write boot linker script
+        match std::fs::write(&boot_link_path, boot_linker_script) {
+            Ok(_) => println!("Generated boot linker script: {:?}", boot_link_path),
+            Err(e) => utils::print_error(&format!("Failed to write boot linker script: {}", e)),
+        }
+        
+        // Write kernel linker script
+        match std::fs::write(&kernel_link_path, kernel_linker_script) {
+            Ok(_) => println!("Generated kernel linker script: {:?}", kernel_link_path),
+            Err(e) => utils::print_error(&format!("Failed to write kernel linker script: {}", e)),
+        }
+        
+        // Generate device tree code for common/generated/devicetree
+        if let Some(dts_path) = device_tree::find_device_tree_file(board_name) {
             let generated_dt_path = root_path.join("common/generated/devicetree/mod.rs");
-            match device_tree::parse_and_generate_simple(&dts_path, &generated_dt_path) {
+            match generate_device_tree_code(&dts_path, &generated_dt_path) {
                 Ok(_) => println!("Generated device tree code: {:?}", generated_dt_path),
                 Err(e) => utils::print_error(&format!("Failed to generate device tree code: {}", e)),
             }
@@ -241,6 +230,30 @@ pub fn build(board_name: &str, target: &str) {
             Err(e) => utils::print_error(&format!("Failed to run cargo: {}", e)),
         }
     }
+}
+
+/// Generate device tree code from DTS file
+/// 从 DTS 文件生成设备树代码
+fn generate_device_tree_code(dts_path: &PathBuf, output_path: &PathBuf) -> Result<(), String> {
+    // Read DTS content
+    let dts_content = fs::read_to_string(dts_path)
+        .map_err(|e| format!("Failed to read DTS file: {}", e))?;
+    
+    // Generate Rust code using device_tree module
+    let generated_code = device_tree::generate_device_tree_info(&dts_content)
+        .map_err(|e| format!("Failed to generate device tree info: {}", e))?;
+    
+    // Ensure output directory exists
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
+    }
+    
+    // Write generated code
+    fs::write(output_path, generated_code)
+        .map_err(|e| format!("Failed to write generated code: {}", e))?;
+    
+    Ok(())
 }
 
 /// Clean build artifacts
