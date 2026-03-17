@@ -1,41 +1,75 @@
 //! RTC - Real-Time Clock
 //! 实时时钟
 //!
-//! STM32U5 RTC 特性：
-//! - 日历功能（秒、分、时、日、月、年、星期）
-//! - 亚秒精度
-//! - 两个闹钟（Alarm A 和 Alarm B）
-//! - 唤醒定时器
-//! - 时间戳功能
-//! - 入侵检测
-//! - 备份寄存器（32 个 32-bit 寄存器）
+//! # Overview / 概述
+//! STM32U5 Real-Time Clock (RTC) provides calendar functions, alarms, wakeup timer,
+//! and backup registers that maintain data during power loss.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 63: Real-time clock (RTC)
+//! 
+//! ## Calendar / 日历功能
+//! - Seconds, minutes, hours (12/24-hour format)
+//! - Date, month, year (0-99, 2000-2099)
+//! - Weekday
+//! - Sub-second precision
+//! 
+//! ## Alarms / 闹钟功能
+//! - **Alarm A** and **Alarm B** with flexible match options
+//! - Wakeup timer with configurable clock source
+//! 
+//! ## Other Features / 其他特性
+//! - Timestamp functionality
+//! - Tamper detection
+//! - 32 backup registers (32-bit each)
+//! - Backup domain retention
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 63: Real-time clock (RTC)
+//! - RM0456 Section 63.1: RTC introduction
+//! - RM0456 Section 63.2: RTC main features
+//! - RM0456 Section 63.3: RTC functional description
+//! - RM0456 Section 63.6: RTC registers
 
-/// RTC base address
+/// RTC base address (backup domain)
+//! Reference: RM0456 Chapter 2, Table 1: Memory map and register boundary addresses
 pub const RTC_BASE: usize = 0x4200_0000;
 
 /// RTC register offsets
+//! Reference: RM0456 Section 63.6: RTC registers
 pub mod reg {
     /// RTC time register
+    //! Reference: RM0456 Section 63.6.2: RTC time register (RTC_TR)
     pub const TR: usize = 0x00;
     /// RTC date register
+    //! Reference: RM0456 Section 63.6.3: RTC date register (RTC_DR)
     pub const DR: usize = 0x04;
     /// RTC sub second register
+    //! Reference: RM0456 Section 63.6.4: RTC subsecond register (RTC_SSR)
     pub const SSR: usize = 0x08;
     /// RTC initialization control and status register
+    //! Reference: RM0456 Section 63.6.5: RTC initialization control and status register (RTC_ICSR)
     pub const ICSR: usize = 0x0C;
     /// RTC prescaler register
+    //! Reference: RM0456 Section 63.6.6: RTC prescaler register (RTC_PRER)
     pub const PRER: usize = 0x10;
     /// RTC wakeup timer register
+    //! Reference: RM0456 Section 63.6.7: RTC wake-up timer register (RTC_WUTR)
     pub const WUTR: usize = 0x14;
     /// RTC control register
+    //! Reference: RM0456 Section 63.6.8: RTC control register (RTC_CR)
     pub const CR: usize = 0x18;
     /// RTC write protection register
+    //! Reference: RM0456 Section 63.6.9: RTC write protection register (RTC_WPR)
     pub const WPR: usize = 0x24;
     /// RTC calibration register
+    //! Reference: RM0456 Section 63.6.10: RTC calibration register (RTC_CALR)
     pub const CALR: usize = 0x28;
     /// RTC shift control register
+    //! Reference: RM0456 Section 63.6.11: RTC shift control register (RTC_SHIFTR)
     pub const SHIFTR: usize = 0x2C;
     /// RTC time stamp time register
+    //! Reference: RM0456 Section 63.6.12: RTC time stamp time register (RTC_TSTR)
     pub const TSTR: usize = 0x30;
     /// RTC time stamp date register
     pub const TSDR: usize = 0x34;

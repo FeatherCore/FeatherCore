@@ -1,28 +1,73 @@
 //! HASH - Hash Processor
 //! 哈希处理器
 //!
-//! STM32U5 HASH 特性：
-//! - SHA-1, SHA-224, SHA-256
-//! - MD5
-//! - HMAC 支持
-//! - DMA 支持
+//! # Overview / 概述
+//! STM32U5 Hash Processor (HASH) provides hardware acceleration for cryptographic
+//! hash functions including SHA-1, SHA-224, SHA-256, and MD5.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 50: Hash processor (HASH)
+//! 
+//! ## Supported Algorithms / 支持的算法
+//! - SHA-1 (Secure Hash Algorithm 1)
+//! - SHA-224 (Secure Hash Algorithm 224-bit)
+//! - SHA-256 (Secure Hash Algorithm 256-bit)
+//! - MD5 (Message Digest Algorithm 5)
+//! 
+//! ## Advanced Features / 高级特性
+//! - HMAC support (Keyed-Hash Message Authentication Code)
+//! - DMA support
+//! - Hardware acceleration
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 50: Hash processor (HASH)
+//! - RM0456 Section 50.1: HASH introduction
+//! - RM0456 Section 50.2: HASH main features
+//! - RM0456 Section 50.3: HASH functional description
+//! - RM0456 Section 50.4: HASH registers
 
-/// HASH base address
+/// HASH base address / HASH 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const HASH_BASE: usize = 0x420C_0400;
 
 /// HASH register offsets
+//! Reference: RM0456 Section 50.4: HASH register map
 pub mod reg {
+    /// Control register
+    //! Reference: RM0456 Section 50.4.1: HASH control register (HASH_CR)
     pub const CR: usize = 0x00;
+    /// Data input register
+    //! Reference: RM0456 Section 50.4.2: HASH data input register (HASH_DIN)
     pub const DIN: usize = 0x04;
+    /// Start register
+    //! Reference: RM0456 Section 50.4.3: HASH start register (HASH_STR)
     pub const STR: usize = 0x08;
+    /// Hash digest register 0
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR0)
     pub const HR0: usize = 0x0C;
+    /// Hash digest register 1
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR1)
     pub const HR1: usize = 0x10;
+    /// Hash digest register 2
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR2)
     pub const HR2: usize = 0x14;
+    /// Hash digest register 3
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR3)
     pub const HR3: usize = 0x18;
+    /// Hash digest register 4
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR4)
     pub const HR4: usize = 0x1C;
+    /// Hash digest register 5
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR5)
     pub const HR5: usize = 0x20;
+    /// Hash digest register 6
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR6)
     pub const HR6: usize = 0x24;
+    /// Hash digest register 7
+    //! Reference: RM0456 Section 50.4.4: HASH digest register (HASH_HR7)
     pub const HR7: usize = 0x28;
+    /// Status register
+    //! Reference: RM0456 Section 50.4.5: HASH status register (HASH_SR)
     pub const SR: usize = 0x2C;
 }
 

@@ -1,20 +1,33 @@
 //! COMP - Comparator
 //! 比较器
 //!
-//! STM32U5 COMP 特性：
-//! - 最多 2 个独立比较器
-//! - 支持多种输入源
-//! - 支持窗口模式
-//! - 支持输出极性选择
-//! - 支持消隐功能
+//! ## STM32U5 COMP 特性 / Features
+//! - **比较器数量 / Comparator Count:**
+//!   - 最多 2 个独立比较器 (COMP1, COMP2)
+//!
+//! - **输入源 / Input Sources:**
+//!   - IO 引脚输入
+//!   - DAC 输出
+//!   - 内部参考电压
+//!
+//! - **功能 / Features:**
+//!   - 支持窗口模式 (Window mode)
+//!   - 支持输出极性选择
+//!   - 支持消隐功能 (Blanking function)
+//!   - 可编程迟滞
+//!   - 中断/事件生成
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 37: Comparator (COMP)
 
-/// COMP1 base address
+/// COMP1 base address / COMP1 基地址
 pub const COMP1_BASE: usize = 0x4000_9200;
-/// COMP2 base address
+/// COMP2 base address / COMP2 基地址
 pub const COMP2_BASE: usize = 0x4000_9204;
 
-/// COMP register offsets
+/// COMP register offsets / COMP 寄存器偏移
 pub mod reg {
+    /// Comparator Control and Status Register / 比较器控制与状态寄存器
     pub const CSR: usize = 0x00;
 }
 

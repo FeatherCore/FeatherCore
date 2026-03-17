@@ -1,28 +1,58 @@
 //! IWDG - Independent Watchdog
 //! 独立看门狗
 //!
-//! IWDG 特性：
-//! - 独立的 12-bit 递减计数器
-//! - 独立的 32 kHz 低速内部振荡器 (LSI)
-//! - 当计数器从 0x000 递减到 0x000 时产生复位
-//! - 在 Stop 和 Standby 模式下仍然工作
+//! # Overview / 概述
+//! STM32U5 Independent Watchdog (IWDG) provides system protection by generating
+//! a reset when the counter reaches zero, even in Stop and Standby modes.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 20: Independent watchdog (IWDG)
+//! 
+//! ## Counter / 计数器
+//! - Independent 12-bit downcounter
+//! - Independent 32 kHz Low-Speed Internal oscillator (LSI)
+//! 
+//! ## Operation / 工作方式
+//! - Reset generated when counter decrements from 0xFFF to 0x000
+//! - Continues operating in Stop and Standby modes
+//! - Refresh operation reloads the counter
+//! 
+//! ## Advanced Features / 高级特性
+//! - Independent from system clock
+//! - Non-maskable
+//! - Programmable timeout period
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 20: Independent watchdog (IWDG)
+//! - RM0456 Section 20.1: IWDG introduction
+//! - RM0456 Section 20.2: IWDG main features
+//! - RM0456 Section 20.3: IWDG functional description
+//! - RM0456 Section 20.4: IWDG registers
 
-/// IWDG base address
+/// IWDG base address / IWDG 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const IWDG_BASE: usize = 0x4000_3000;
 
 /// IWDG register offsets
+//! Reference: RM0456 Section 20.4: IWDG register map
 pub mod reg {
     /// IWDG key register
+    //! Reference: RM0456 Section 20.4.1: IWDG key register (IWDG_KR)
     pub const KR: usize = 0x00;
     /// IWDG prescaler register
+    //! Reference: RM0456 Section 20.4.2: IWDG prescaler register (IWDG_PR)
     pub const PR: usize = 0x04;
     /// IWDG reload register
+    //! Reference: RM0456 Section 20.4.3: IWDG reload register (IWDG_RLR)
     pub const RLR: usize = 0x08;
     /// IWDG status register
+    //! Reference: RM0456 Section 20.4.4: IWDG status register (IWDG_SR)
     pub const SR: usize = 0x0C;
     /// IWDG window register
+    //! Reference: RM0456 Section 20.4.5: IWDG window register (IWDG_WINR)
     pub const WINR: usize = 0x10;
     /// IWDG early wakeup interrupt register
+    //! Reference: RM0456 Section 20.4.6: IWDG early wakeup interrupt register (IWDG_EWCR)
     pub const EWCR: usize = 0x14;
 }
 

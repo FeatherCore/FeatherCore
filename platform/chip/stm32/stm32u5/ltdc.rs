@@ -1,15 +1,25 @@
 //! LTDC - LCD-TFT Display Controller
 //! LCD-TFT 显示控制器
 //!
-//! STM32U5 LTDC 特性：
-//! - 支持 24-bit RGB 并行输出
-//! - 支持 8 位每像素（RGB888）
-//! - 支持 2 个独立显示层
-//! - 支持窗口和混合功能
-//! - 支持可编程极性
-//! - 支持多种颜色格式
+//! ## STM32U5 LTDC 特性 / Features
+//! - **显示输出 / Display Output:**
+//!   - 24-bit RGB 并行输出
+//!   - 8 位每像素 (RGB888)
+//!
+//! - **显示层 / Display Layers:**
+//!   - 2 个独立显示层
+//!   - 窗口和混合功能 (Blending)
+//!
+//! - **特性 / Features:**
+//!   - 可编程极性 (Programmable polarity)
+//!   - 多种颜色格式支持
+//!   - 硬件加速
+//!   - 中断支持
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 56: LCD-TFT display controller (LTDC)
 
-/// LTDC base address
+/// LTDC base address / LTDC 基地址
 pub const LTDC_BASE: usize = 0x4001_6800;
 
 /// LTDC register offsets

@@ -1,19 +1,38 @@
 //! NVIC - Nested Vectored Interrupt Controller
 //! 嵌套向量中断控制器
 //!
-//! STM32U5 使用 ARM Cortex-M33 的 NVIC，支持：
-//! - 最多 240 个外部中断
-//! - 16 个可编程优先级（4 位优先级）
-//! - TrustZone 安全扩展
+//! # Overview / 概述
+//! STM32U5 Nested Vectored Interrupt Controller (NVIC) provides interrupt management
+//! with support for up to 240 external interrupts and 16 programmable priority levels.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 10: Nested vectored interrupt controller (NVIC)
+//! 
+//! ## Interrupt Features / 中断特性
+//! - Up to 240 external interrupts
+//! - 16 programmable priority levels (4-bit)
+//! 
+//! ## Security / 安全特性
+//! - TrustZone Security Extension support
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 10: Nested vectored interrupt controller (NVIC)
+//! - RM0456 Section 10.1: NVIC introduction
+//! - RM0456 Section 10.2: NVIC main features
+//! - RM0456 Section 10.3: NVIC functional description
+//! - RM0456 Section 10.4: NVIC registers
 
-/// NVIC base address
+/// NVIC base address / NVIC 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const NVIC_BASE: usize = 0xE000_E100;
 /// NVIC base address for secure state (when TrustZone is enabled)
 pub const NVIC_BASE_S: usize = 0xE002_E100;
 
 /// NVIC register offsets
+//! Reference: RM0456 Section 10.4: NVIC register map
 pub mod reg {
     /// Interrupt set enable registers (0-31)
+    //! Reference: RM0456 Section 10.4.1: NVIC ISERx
     pub const ISER0: usize = 0x000;
     pub const ISER1: usize = 0x004;
     pub const ISER2: usize = 0x008;
@@ -24,6 +43,7 @@ pub mod reg {
     pub const ISER7: usize = 0x01C;
 
     /// Interrupt clear enable registers (0-31)
+    //! Reference: RM0456 Section 10.4.2: NVIC ICERx
     pub const ICER0: usize = 0x080;
     pub const ICER1: usize = 0x084;
     pub const ICER2: usize = 0x088;
@@ -34,6 +54,7 @@ pub mod reg {
     pub const ICER7: usize = 0x09C;
 
     /// Interrupt set pending registers
+    //! Reference: RM0456 Section 10.4.3: NVIC ISPRx
     pub const ISPR0: usize = 0x100;
     pub const ISPR1: usize = 0x104;
     pub const ISPR2: usize = 0x108;

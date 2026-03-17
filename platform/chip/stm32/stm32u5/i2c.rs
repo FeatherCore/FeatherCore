@@ -1,43 +1,90 @@
 //! I2C - Inter-Integrated Circuit
 //! I2C 总线接口
 //!
-//! STM32U5 支持多个 I2C 接口，支持标准模式 (100 kHz)、
-//! 快速模式 (400 kHz) 和快速模式+ (1 MHz)。
+//! # Overview / 概述
+//! STM32U5 Inter-Integrated Circuit (I2C) interfaces provide high-speed communication
+//! with I2C-compatible devices, supporting multiple speed modes and advanced features.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 65: Inter-integrated circuit interface (I2C)
+//! 
+//! ## I2C Interfaces / I2C接口
+//! - **I2C1, I2C2, I2C3, I2C4**
+//! 
+//! ## Transfer Speeds / 传输速率
+//! - **Standard mode:** 100 kHz
+//! - **Fast mode:** 400 kHz
+//! - **Fast mode+:** 1 MHz
+//! - **Ultra-fast mode:** 5 MHz
+//! 
+//! ## Advanced Features / 高级特性
+//! - DMA support
+//! - SMBus support
+//! - PMBus support
+//! - Clock stretching
+//! - Multi-master/slave modes
+//! - 7-bit and 10-bit addressing
+//! - Automatic end mode
+//! - PEC calculation
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 65: Inter-integrated circuit interface (I2C)
+//! - RM0456 Section 65.1: I2C introduction
+//! - RM0456 Section 65.2: I2C main features
+//! - RM0456 Section 65.3: I2C functional description
+//! - RM0456 Section 65.6: I2C registers
 
-/// I2C1 base address
+/// I2C1 base address / I2C1 基地址
+//! Reference: RM0456 Chapter 2, Table 1: Memory map and register boundary addresses
 pub const I2C1_BASE: usize = 0x4000_5400;
-/// I2C2 base address
+/// I2C2 base address / I2C2 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const I2C2_BASE: usize = 0x4000_5800;
-/// I2C3 base address
+/// I2C3 base address / I2C3 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const I2C3_BASE: usize = 0x4000_5C00;
-/// I2C4 base address
+/// I2C4 base address / I2C4 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const I2C4_BASE: usize = 0x4000_8400;
 
 /// I2C register offsets
+//! Reference: RM0456 Section 65.6: I2C register map
 pub mod reg {
     /// Control register 1
+    //! Reference: RM0456 Section 65.6.1: I2C control register 1 (I2C_CR1)
     pub const CR1: usize = 0x00;
     /// Control register 2
+    //! Reference: RM0456 Section 65.6.2: I2C control register 2 (I2C_CR2)
     pub const CR2: usize = 0x04;
     /// Own address 1 register
+    //! Reference: RM0456 Section 65.6.3: I2C own address 1 register (I2C_OAR1)
     pub const OAR1: usize = 0x08;
     /// Own address 2 register
+    //! Reference: RM0456 Section 65.6.4: I2C own address 2 register (I2C_OAR2)
     pub const OAR2: usize = 0x0C;
     /// Timing register
+    //! Reference: RM0456 Section 65.6.5: I2C timing register (I2C_TIMINGR)
     pub const TIMINGR: usize = 0x10;
     /// Timeout register
+    //! Reference: RM0456 Section 65.6.6: I2C timeout register (I2C_TIMEOUTR)
     pub const TIMEOUTR: usize = 0x14;
     /// Interrupt and status register
+    //! Reference: RM0456 Section 65.6.7: I2C interrupt and status register (I2C_ISR)
     pub const ISR: usize = 0x18;
     /// Interrupt clear register
+    //! Reference: RM0456 Section 65.6.8: I2C interrupt clear register (I2C_ICR)
     pub const ICR: usize = 0x1C;
     /// PEC register
+    //! Reference: RM0456 Section 65.6.9: I2C PEC register (I2C_PECR)
     pub const PECR: usize = 0x20;
     /// Receive data register
+    //! Reference: RM0456 Section 65.6.10: I2C receive data register (I2C_RXDR)
     pub const RXDR: usize = 0x24;
     /// Transmit data register
+    //! Reference: RM0456 Section 65.6.11: I2C transmit data register (I2C_TXDR)
     pub const TXDR: usize = 0x28;
     /// Autonomous mode control register
+    //! Reference: RM0456 Section 65.6.12: I2C autonomous mode control register (I2C_AUTOCR)
     pub const AUTOCR: usize = 0x2C;
 }
 

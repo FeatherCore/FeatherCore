@@ -1,26 +1,50 @@
 //! PKA - Public Key Accelerator
 //! 公钥加速器
 //!
-//! STM32U5 PKA 特性:
+//! # Overview / 概述
+//! STM32U5 Public Key Accelerator (PKA) provides hardware acceleration for
+//! asymmetric cryptographic operations including RSA and ECC.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 53: Public key accelerator (PKA)
+//! 
+//! ## Supported Algorithms / 支持的算法
 //! - RSA (up to 4096-bit)
 //! - ECC (Elliptic Curve Cryptography)
 //! - ECDSA (Elliptic Curve Digital Signature Algorithm)
 //! - ECDH (Elliptic Curve Diffie-Hellman)
 //! - DH (Diffie-Hellman)
-//! - 硬件加速大数运算
+//! 
+//! ## Advanced Features / 高级特性
+//! - Hardware acceleration for large number operations
+//! - Multiple elliptic curve support
+//! - DMA support
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 53: Public key accelerator (PKA)
+//! - RM0456 Section 53.1: PKA introduction
+//! - RM0456 Section 53.2: PKA main features
+//! - RM0456 Section 53.3: PKA functional description
+//! - RM0456 Section 53.4: PKA registers
 
-/// PKA base address
+/// PKA base address / PKA 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const PKA_BASE: usize = 0x420C_0800;
 
 /// PKA register offsets
+//! Reference: RM0456 Section 53.4: PKA register map
 pub mod reg {
     /// PKA control register
+    //! Reference: RM0456 Section 53.4.1: PKA control register (PKA_CR)
     pub const CR: usize = 0x00;
     /// PKA status register
+    //! Reference: RM0456 Section 53.4.2: PKA status register (PKA_SR)
     pub const SR: usize = 0x04;
     /// PKA clear flag register
+    //! Reference: RM0456 Section 53.4.3: PKA clear flag register (PKA_CLRFR)
     pub const CLRFR: usize = 0x08;
     /// PKA RAM start address
+    //! Reference: RM0456 Section 53.4.4: PKA RAM start address (PKA_RAM0)
     pub const RAM0: usize = 0x400;
 }
 

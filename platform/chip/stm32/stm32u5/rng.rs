@@ -1,25 +1,48 @@
 //! RNG - Random Number Generator
 //! 随机数生成器
 //!
-//! STM32U5 RNG 特性:
-//! - 硬件随机数生成器
-//! - 符合 NIST SP 800-90B 标准
-//! - 32-bit 随机数输出
-//! - DMA 支持
-//! - 中断支持
+//! # Overview / 概述
+//! STM32U5 Random Number Generator (RNG) provides hardware-based random number
+//! generation compliant with NIST SP 800-90B standard.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 48: Random number generator (RNG)
+//! 
+//! ## Random Number Generation / 随机数生成
+//! - Hardware random number generator
+//! - Compliant with NIST SP 800-90B standard
+//! - 32-bit random number output
+//! 
+//! ## Advanced Features / 高级特性
+//! - DMA support
+//! - Interrupt support
+//! - Continuous/single-shot mode
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 48: Random number generator (RNG)
+//! - RM0456 Section 48.1: RNG introduction
+//! - RM0456 Section 48.2: RNG main features
+//! - RM0456 Section 48.3: RNG functional description
+//! - RM0456 Section 48.4: RNG registers
 
 /// RNG base address / RNG 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const RNG_BASE: usize = 0x4204_0000;
 
 /// RNG register offsets / RNG 寄存器偏移
+//! Reference: RM0456 Section 48.4: RNG register map
 pub mod reg {
     /// Control register / 控制寄存器
+    //! Reference: RM0456 Section 48.4.1: RNG control register (RNG_CR)
     pub const CR: usize = 0x00;
     /// Status register / 状态寄存器
+    //! Reference: RM0456 Section 48.4.2: RNG status register (RNG_SR)
     pub const SR: usize = 0x04;
     /// Data register / 数据寄存器
+    //! Reference: RM0456 Section 48.4.3: RNG data register (RNG_DR)
     pub const DR: usize = 0x08;
     /// Health test control register / 健康测试控制寄存器
+    //! Reference: RM0456 Section 48.4.4: RNG health test configuration register (RNG_HTCR)
     pub const HTCR: usize = 0x0C;
 }
 

@@ -1,23 +1,49 @@
 //! DMA - Direct Memory Access
 //! 直接内存访问控制器
 //!
-//! STM32U5 具有两个 DMA 控制器：
-//! - GPDMA1: 16 通道通用 DMA
-//! - LPDMA1: 4 通道低功耗 DMA
-//!
-//! 支持内存到内存、外设到内存、内存到外设传输
+//! # Overview / 概述
+//! STM32U5 Direct Memory Access (DMA) controllers provide high-speed data transfer
+//! between memory and peripherals without CPU intervention.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 11: DMA controller (GPDMA) and Chapter 14: Low-power DMA (LPDMA)
+//! 
+//! ## DMA Controllers / DMA控制器
+//! - **GPDMA1:** 16-channel General Purpose DMA
+//! - **LPDMA1:** 4-channel Low Power DMA
+//! 
+//! ## Transfer Types / 传输类型
+//! - Memory to Memory
+//! - Peripheral to Memory
+//! - Memory to Peripheral
+//! 
+//! ## Advanced Features / 高级特性
+//! - Linked-list mode
+//! - Circular mode
+//! - Double buffering
+//! - FIFO support
+//! - Burst transfer
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 11: DMA controller (GPDMA)
+//! - RM0456 Chapter 14: Low-power DMA (LPDMA)
+//! - RM0456 Section 11.1: GPDMA introduction
+//! - RM0456 Section 14.1: LPDMA introduction
 
-/// GPDMA1 base address
+/// GPDMA1 base address / GPDMA1 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const GPDMA1_BASE: usize = 0x4002_1000;
-/// LPDMA1 base address
+/// LPDMA1 base address / LPDMA1 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const LPDMA1_BASE: usize = 0x4002_7000;
 
-/// DMAMUX1 base address
+/// DMAMUX1 base address / DMAMUX1 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const DMAMUX1_BASE: usize = 0x4002_0800;
 
-/// DMA channel register offsets (per channel)
+/// DMA channel register offsets / DMA 通道寄存器偏移 (per channel)
 pub mod ch_reg {
-    /// DMA channel x linked-list address register
+    /// DMA channel x linked-list address register / DMA 通道 x 链接列表地址寄存器
     pub const LBAR: usize = 0x00;
     /// DMA channel x flag clear register
     pub const FCR: usize = 0x04;

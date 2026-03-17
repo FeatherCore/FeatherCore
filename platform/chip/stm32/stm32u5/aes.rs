@@ -1,65 +1,107 @@
 //! AES - Advanced Encryption Standard
 //! 高级加密标准硬件加速器
 //!
-//! STM32U5 AES 特性:
-//! - 支持 AES-128, AES-192, AES-256 密钥长度
-//! - 支持多种加密模式: ECB, CBC, CTR, GCM, CCM
-//! - 硬件加密/解密加速
-//! - DMA 支持
-//! - 支持脱敏加密 (Data Encryption Standard)
-//! - 支持 GCM/CCM 认证
+//! # Overview / 概述
+//! STM32U5 Advanced Encryption Standard (AES) hardware accelerator provides
+//! high-performance encryption and decryption with support for multiple key sizes
+//! and operation modes.
 //!
-//! ## AES 加密模式 / Encryption Modes
-//! - **ECB** (Electronic Codebook): 最简单的模式,每个块独立加密
-//! - **CBC** (Cipher Block Chaining): 前一个密文块与当前明文块异或后再加密
-//! - **CTR** (Counter): 使用计数器生成密钥流
-//! - **GCM** (Galois/Counter Mode): 提供加密和认证
-//! - **CCM** (Counter with CBC-MAC): 提供加密和认证
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 49: AES hardware accelerator (AES)
+//!
+//! ## Key Sizes / 密钥长度
+//! - **AES-128:** 128-bit key
+//! - **AES-192:** 192-bit key
+//! - **AES-256:** 256-bit key
+//!
+//! ## Encryption/Decryption Modes / 加解密模式
+//! Reference: RM0456 Section 49.3.3
+//! - **ECB (Electronic Codebook):** Simplest mode, each block encrypted independently
+//! - **CBC (Cipher Block Chaining):** Each plaintext block XORed with previous ciphertext
+//! - **CTR (Counter):** Uses counter to generate keystream
+//! - **GCM (Galois/Counter Mode):** Provides encryption and authentication
+//! - **CCM (Counter with CBC-MAC):** Provides encryption and authentication
+//!
+//! ## Advanced Features / 高级特性
+//! - Hardware encryption/decryption acceleration
+//! - DMA support
+//! - GCM/CCM authentication
+//! - CCM dual DMA trigger
+//! - Key derivation support
+//!
+//! # Reference / 参考
+//! - RM0456 Chapter 49: AES hardware accelerator (AES)
+//! - RM0456 Section 49.1: AES introduction
+//! - RM0456 Section 49.2: AES main features
+//! - RM0456 Section 49.3: AES functional description
+//! - RM0456 Section 49.4: AES registers
 
 /// AES base address / AES 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const AES_BASE: usize = 0x420C_0000;
 
 /// AES register offsets / AES 寄存器偏移
+//! Reference: RM0456 Section 49.4: AES registers
 pub mod reg {
     /// Control register / 控制寄存器
+    //! Reference: RM0456 Section 49.4.1: AES_CR
     pub const CR: usize = 0x00;
     /// Status register / 状态寄存器
+    //! Reference: RM0456 Section 49.4.2: AES_SR
     pub const SR: usize = 0x04;
     /// Data input register / 数据输入寄存器
+    //! Reference: RM0456 Section 49.4.3: AES_DINR
     pub const DINR: usize = 0x08;
     /// Data output register / 数据输出寄存器
+    //! Reference: RM0456 Section 49.4.4: AES_DOUTR
     pub const DOUTR: usize = 0x0C;
     /// Key register 0 / 密钥寄存器 0
+    //! Reference: RM0456 Section 49.4.5: AES_KEYR0
     pub const KEYR0: usize = 0x10;
     /// Key register 1 / 密钥寄存器 1
+    //! Reference: RM0456 Section 49.4.5: AES_KEYR1
     pub const KEYR1: usize = 0x14;
     /// Key register 2 / 密钥寄存器 2
+    //! Reference: RM0456 Section 49.4.5: AES_KEYR2
     pub const KEYR2: usize = 0x18;
     /// Key register 3 / 密钥寄存器 3
+    //! Reference: RM0456 Section 49.4.5: AES_KEYR3
     pub const KEYR3: usize = 0x1C;
     /// Initialization Vector register 0 / 初始化向量寄存器 0
+    //! Reference: RM0456 Section 49.4.6: AES_IVR0
     pub const IVR0: usize = 0x20;
     /// Initialization Vector register 1 / 初始化向量寄存器 1
+    //! Reference: RM0456 Section 49.4.6: AES_IVR1
     pub const IVR1: usize = 0x24;
     /// Initialization Vector register 2 / 初始化向量寄存器 2
+    //! Reference: RM0456 Section 49.4.6: AES_IVR2
     pub const IVR2: usize = 0x28;
     /// Initialization Vector register 3 / 初始化向量寄存器 3
+    //! Reference: RM0456 Section 49.4.6: AES_IVR3
     pub const IVR3: usize = 0x2C;
     /// Key register 4 (for AES-256) / 密钥寄存器 4 (用于 AES-256)
+    //! Reference: RM0456 Section 49.4.7: AES_KEYR4
     pub const KEYR4: usize = 0x30;
     /// Key register 5 (for AES-256) / 密钥寄存器 5 (用于 AES-256)
+    //! Reference: RM0456 Section 49.4.7: AES_KEYR5
     pub const KEYR5: usize = 0x34;
     /// Key register 6 (for AES-256) / 密钥寄存器 6 (用于 AES-256)
+    //! Reference: RM0456 Section 49.4.7: AES_KEYR6
     pub const KEYR6: usize = 0x38;
     /// Key register 7 (for AES-256) / 密钥寄存器 7 (用于 AES-256)
+    //! Reference: RM0456 Section 49.4.7: AES_KEYR7
     pub const KEYR7: usize = 0x3C;
     /// GCM/CCM Initialization Vector register 0 / GCM/CCM 初始化向量寄存器 0
+    //! Reference: RM0456 Section 49.4.8: AES_IVR0_1
     pub const IVR0_1: usize = 0x40;
     /// GCM/CCM Initialization Vector register 1 / GCM/CCM 初始化向量寄存器 1
+    //! Reference: RM0456 Section 49.4.8: AES_IVR1_1
     pub const IVR1_1: usize = 0x44;
     /// GCM/CCM Initialization Vector register 2 / GCM/CCM 初始化向量寄存器 2
+    //! Reference: RM0456 Section 49.4.8: AES_IVR2_1
     pub const IVR2_1: usize = 0x48;
     /// GCM/CCM Initialization Vector register 3 / GCM/CCM 初始化向量寄存器 3
+    //! Reference: RM0456 Section 49.4.8: AES_IVR3_1
     pub const IVR3_1: usize = 0x4C;
 }
 

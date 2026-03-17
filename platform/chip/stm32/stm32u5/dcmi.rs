@@ -1,15 +1,26 @@
 //! DCMI - Digital Camera Interface
 //! 数字摄像头接口
 //!
-//! STM32U5 DCMI 特性：
-//! - 支持 8/10/12/14-bit 并行接口
-//! - 支持嵌入式或行/帧同步
-//! - 支持连续或快照模式
-//! - 支持裁剪功能
-//! - 支持 JPEG 压缩
-//! - 支持 DMA 传输
+//! ## STM32U5 DCMI 特性 / Features
+//! - **数据宽度 / Data Width:** 8/10/12/14-bit 并行接口
+//! - **同步模式 / Sync Modes:**
+//!   - 嵌入式同步 (Embedded sync)
+//!   - 行同步 (Line sync)
+//!   - 帧同步 (Frame sync)
+//!
+//! - **工作模式 / Modes:**
+//!   - 连续模式 (Continuous mode)
+//!   - 快照模式 (Snapshot mode)
+//!
+//! - **特性 / Features:**
+//!   - 裁剪功能 (Cropping)
+//!   - JPEG 压缩支持
+//!   - DMA 传输支持
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 52: Digital camera interface (DCMI)
 
-/// DCMI base address
+/// DCMI base address / DCMI 基地址
 pub const DCMI_BASE: usize = 0x4202_C000;
 
 /// DCMI register offsets

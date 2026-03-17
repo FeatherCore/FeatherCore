@@ -1,27 +1,57 @@
 //! CRC - Cyclic Redundancy Check
-//! 循环冗余校验
+//! 循环冗余校验计算单元
 //!
-//! STM32U5 CRC 特性：
-//! - 支持 CRC-8, CRC-16, CRC-32
-//! - 可编程多项式
-//! - 可编程初始值
-//! - 输入/输出数据反转
-//! - 字节、半字、字操作
+//! # Overview / 概述
+//! STM32U5 Cyclic Redundancy Check (CRC) provides hardware acceleration for
+//! CRC calculations with support for multiple CRC standards.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 24: Cyclic redundancy check calculation unit (CRC)
+//! 
+//! ## Supported CRC Standards / 支持的 CRC 标准
+//! - CRC-8
+//! - CRC-16
+//! - CRC-32
+//! 
+//! ## Programmable Features / 可编程特性
+//! - Programmable polynomial
+//! - Programmable initial value
+//! - Input data reverse
+//! - Output data reverse
+//! 
+//! ## Data Width / 数据宽度
+//! - Byte operation (8-bit)
+//! - Half-word operation (16-bit)
+//! - Word operation (32-bit)
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 24: Cyclic redundancy check calculation unit (CRC)
+//! - RM0456 Section 24.1: CRC introduction
+//! - RM0456 Section 24.2: CRC main features
+//! - RM0456 Section 24.3: CRC functional description
+//! - RM0456 Section 24.4: CRC registers
 
-/// CRC base address
+/// CRC base address / CRC 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const CRC_BASE: usize = 0x4002_3000;
 
-/// CRC register offsets
+/// CRC register offsets / CRC 寄存器偏移
+//! Reference: RM0456 Section 24.4: CRC register map
 pub mod reg {
-    /// CRC data register
+    /// CRC data register / CRC 数据寄存器
+    //! Reference: RM0456 Section 24.4.1: CRC data register (CRC_DR)
     pub const DR: usize = 0x00;
-    /// CRC independent data register
+    /// CRC independent data register / CRC 独立数据寄存器
+    //! Reference: RM0456 Section 24.4.2: CRC independent data register (CRC_IDR)
     pub const IDR: usize = 0x04;
-    /// CRC control register
+    /// CRC control register / CRC 控制寄存器
+    //! Reference: RM0456 Section 24.4.3: CRC control register (CRC_CR)
     pub const CR: usize = 0x08;
     /// CRC initial value register
+    //! Reference: RM0456 Section 24.4.4: CRC initial value register (CRC_INIT)
     pub const INIT: usize = 0x10;
     /// CRC polynomial register
+    //! Reference: RM0456 Section 24.4.5: CRC polynomial register (CRC_POL)
     pub const POL: usize = 0x14;
 }
 

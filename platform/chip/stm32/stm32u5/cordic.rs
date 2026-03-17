@@ -1,20 +1,38 @@
 //! CORDIC - Coordinate Rotation Digital Computer
 //! 坐标旋转数字计算机
 //!
-//! STM32U5 CORDIC 特性：
-//! - 支持多种函数计算：sin, cos, sinh, cosh, atan, atanh, sqrt, ln
-//! - 支持 32-bit 和 16-bit 精度模式
-//! - 支持 Q31, Q15 数据格式
-//! - 支持 DMA 传输
-//! - 单次或循环模式
+//! ## STM32U5 CORDIC 特性 / Features
+//! - **支持函数 / Supported Functions:**
+//!   - 三角函数: sin, cos, atan
+//!   - 双曲函数: sinh, cosh, atanh
+//!   - 其他: sqrt, ln, exp
+//!
+//! - **精度模式 / Precision Modes:**
+//!   - 32-bit 精度模式
+//!   - 16-bit 精度模式
+//!
+//! - **数据格式 / Data Formats:**
+//!   - Q31 格式 (32-bit)
+//!   - Q15 格式 (16-bit)
+//!
+//! - **特性 / Features:**
+//!   - DMA 传输支持
+//!   - 单次或循环模式
+//!   - 协处理器模式
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 25: CORDIC coprocessor (CORDIC)
 
-/// CORDIC base address
+/// CORDIC base address / CORDIC 基地址
 pub const CORDIC_BASE: usize = 0x4004_0C00;
 
-/// CORDIC register offsets
+/// CORDIC register offsets / CORDIC 寄存器偏移
 pub mod reg {
+    /// Control and Status Register / 控制与状态寄存器
     pub const CSR: usize = 0x00;
+    /// Write Data Register / 写数据寄存器
     pub const WDATA: usize = 0x04;
+    /// Read Data Register / 读数据寄存器
     pub const RDATA: usize = 0x08;
 }
 

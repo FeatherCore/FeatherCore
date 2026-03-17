@@ -1,23 +1,49 @@
 //! WWDG - Window Watchdog
 //! 窗口看门狗
 //!
-//! WWDG 特性：
-//! - 7-bit 递减计数器
-//! - 可编程的窗口值
-//! - 必须在窗口内喂狗，否则产生复位
-//! - 早期唤醒中断 (EWI)
-//! - 由 APB 时钟驱动
+//! # Overview / 概述
+//! STM32U5 Window Watchdog (WWDG) provides system protection by generating a reset
+//! if the refresh window is not respected, ensuring the application refreshes within
+//! a valid time window.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 21: Window watchdog (WWDG)
+//! 
+//! ## Counter / 计数器
+//! - 7-bit downcounter
+//! - Driven by APB clock
+//! 
+//! ## Window Mechanism / 窗口机制
+//! - Programmable window value
+//! - Reset generated if refresh occurs outside window
+//! - Early Wakeup Interrupt (EWI)
+//! 
+//! ## Advanced Features / 高级特性
+//! - Programmable timeout period
+//! - Interrupt advance warning
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 21: Window watchdog (WWDG)
+//! - RM0456 Section 21.1: WWDG introduction
+//! - RM0456 Section 21.2: WWDG main features
+//! - RM0456 Section 21.3: WWDG functional description
+//! - RM0456 Section 21.4: WWDG registers
 
 /// WWDG base address
+//! Reference: RM0456 Chapter 2, Table 1
 pub const WWDG_BASE: usize = 0x4000_2C00;
 
 /// WWDG register offsets
+//! Reference: RM0456 Section 21.4: WWDG register map
 pub mod reg {
     /// WWDG control register
+    //! Reference: RM0456 Section 21.4.1: WWDG control register (WWDG_CR)
     pub const CR: usize = 0x00;
     /// WWDG configuration register
+    //! Reference: RM0456 Section 21.4.2: WWDG configuration register (WWDG_CFR)
     pub const CFR: usize = 0x04;
     /// WWDG status register
+    //! Reference: RM0456 Section 21.4.3: WWDG status register (WWDG_SR)
     pub const SR: usize = 0x08;
 }
 

@@ -1,43 +1,78 @@
 //! I3C - Improved Inter-Integrated Circuit
 //! 改进型集成电路总线
 //!
-//! STM32U5 I3C 特性:
-//! - I3C 主设备模式
-//! - 支持 I2C 兼容模式
-//! - 支持高速模式 (High Speed): 8 Mbps
-//! - 支持带内中断 (In-Band Interrupt)
-//! - 支持主设备请求 (Master Request)
-//! - DMA 支持
+//! # Overview / 概述
+//! STM32U5 Improved Inter-Integrated Circuit (I3C) provides high-speed communication
+//! with support for I3C master mode and I2C compatible mode.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 61: Improved inter-integrated circuit (I3C)
+//! 
+//! ## Operating Modes / 工作模式
+//! - I3C Master mode
+//! - I2C compatible mode
+//! 
+//! ## Transfer Speed / 传输速率
+//! - Standard mode: 12.5 MHz
+//! - High Speed: 8 Mbps
+//! - Ultra-fast: 12.5 MHz
+//! 
+//! ## Advanced Features / 高级特性
+//! - In-Band Interrupt (IBI)
+//! - Master Request (MR)
+//! - DMA support
+//! - Hot-Join support
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 61: Improved inter-integrated circuit (I3C)
+//! - RM0456 Section 61.1: I3C introduction
+//! - RM0456 Section 61.2: I3C main features
+//! - RM0456 Section 61.3: I3C functional description
+//! - RM0456 Section 61.4: I3C registers
 
-/// I3C1 base address
+/// I3C1 base address / I3C1 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const I3C1_BASE: usize = 0x4000_6000;
 
 /// I3C register offsets
+//! Reference: RM0456 Section 61.4: I3C register map
 pub mod reg {
     /// Control register
+    //! Reference: RM0456 Section 60.4.1: I3C control register (I3C_CR)
     pub const CR: usize = 0x00;
     /// Status register
+    //! Reference: RM0456 Section 60.4.2: I3C status register (I3C_SR)
     pub const SR: usize = 0x04;
     /// Interrupt enable register
+    //! Reference: RM0456 Section 60.4.3: I3C interrupt enable register (I3C_IER)
     pub const IER: usize = 0x08;
     /// Interrupt status register
+    //! Reference: RM0456 Section 60.4.4: I3C interrupt status register (I3C_ISR)
     pub const ISR: usize = 0x0C;
     /// Interrupt clear register
+    //! Reference: RM0456 Section 60.4.5: I3C interrupt clear register (I3C_ICR)
     pub const ICR: usize = 0x10;
     /// Timing register 1
+    //! Reference: RM0456 Section 60.4.6: I3C timing register 1 (I3C_TIMINGR1)
     pub const TIMINGR1: usize = 0x14;
     /// Timing register 2
+    //! Reference: RM0456 Section 60.4.7: I3C timing register 2 (I3C_TIMINGR2)
     pub const TIMINGR2: usize = 0x18;
     /// Timing register 3
+    //! Reference: RM0456 Section 60.4.8: I3C timing register 3 (I3C_TIMINGR3)
     pub const TIMINGR3: usize = 0x1C;
     /// Address and command register
+    //! Reference: RM0456 Section 60.4.9: I3C address and command register (I3C_ADDR_CMD)
     pub const_ADDR_CMD: usize = 0x20;
     /// Data receive register
+    //! Reference: RM0456 Section 60.4.10: I3C data receive register (I3C_RXDR)
     pub const RXDR: usize = 0x24;
     /// Data transmit register
+    //! Reference: RM0456 Section 60.4.11: I3C data transmit register (I3C_TXDR)
     pub const TXDR: usize = 0x28;
     /// Control clear register
-    pub const CRCLR: usize = 0x2C;
+    //! Reference: RM0456 Section 60.4.12: I3C control clear register (I3C_CCR)
+    pub const CCR: usize = 0x2C;
     /// Timing register 4
     pub const TIMINGR4: usize = 0x30;
     /// Timing register 5

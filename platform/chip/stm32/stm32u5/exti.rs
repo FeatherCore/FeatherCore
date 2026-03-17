@@ -1,40 +1,75 @@
 //! EXTI - External Interrupt/Event Controller
 //! 外部中断/事件控制器
 //!
-//! STM32U5 EXTI 特性:
-//! - 最多 22 个外部中断/事件线
-//! - 支持上升沿、下降沿或双边沿触发
-//! - 支持软件触发
-//! - 每个中断线可独立配置
+//! # Overview / 概述
+//! STM32U5 Extended Interrupt and Event Controller (EXTI) manages external interrupts
+//! and events with up to 22 configurable interrupt/event lines.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 23: Extended interrupt and event controller (EXTI)
+//! 
+//! ## Interrupt Lines / 中断线
+//! - Up to 22 external interrupt/event lines
+//! 
+//! ## Trigger Modes / 触发方式
+//! - Rising edge trigger
+//! - Falling edge trigger
+//! - Both edges trigger
+//! 
+//! ## Advanced Features / 高级特性
+//! - Software trigger support
+//! - Independent configuration per line
+//! - Masking capability
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 23: Extended interrupt and event controller (EXTI)
+//! - RM0456 Section 23.1: EXTI introduction
+//! - RM0456 Section 23.2: EXTI main features
+//! - RM0456 Section 23.3: EXTI functional description
+//! - RM0456 Section 23.4: EXTI registers
 
-/// EXTI base address
+/// EXTI base address / EXTI 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const EXTI_BASE: usize = 0x4002_1800;
 
 /// EXTI register offsets
+//! Reference: RM0456 Section 23.4: EXTI register map
 pub mod reg {
     /// Rising trigger selection register
+    //! Reference: RM0456 Section 23.4.1: Rising trigger selection register (EXTI_RTSR1)
     pub const RTSR1: usize = 0x00;
     /// Falling trigger selection register
+    //! Reference: RM0456 Section 23.4.2: Falling trigger selection register (EXTI_FTSR1)
     pub const FTSR1: usize = 0x04;
     /// Software interrupt event register
+    //! Reference: RM0456 Section 23.4.3: Software interrupt event register (EXTI_SWIER1)
     pub const SWIER1: usize = 0x08;
     /// Rising edge pending register
+    //! Reference: RM0456 Section 23.4.4: Rising edge pending register (EXTI_RPR1)
     pub const RPR1: usize = 0x0C;
     /// Falling edge pending register
+    //! Reference: RM0456 Section 12.4.5: Falling edge pending register (EXTI_FPR1)
     pub const FPR1: usize = 0x10;
     /// Security rising edge pending register
+    //! Reference: RM0456 Section 12.4.6: Security rising edge pending register (EXTI_SR1PR)
     pub const SR1PR: usize = 0x14;
     /// External interrupt configuration register 1
+    //! Reference: RM0456 Section 12.4.7: External interrupt configuration register 1 (EXTI_EXTICR1)
     pub const EXTICR1: usize = 0x60;
     /// External interrupt configuration register 2
+    //! Reference: RM0456 Section 12.4.7: External interrupt configuration register 2 (EXTI_EXTICR2)
     pub const EXTICR2: usize = 0x64;
     /// External interrupt configuration register 3
+    //! Reference: RM0456 Section 12.4.7: External interrupt configuration register 3 (EXTI_EXTICR3)
     pub const EXTICR3: usize = 0x68;
     /// External interrupt configuration register 4
+    //! Reference: RM0456 Section 12.4.7: External interrupt configuration register 4 (EXTI_EXTICR4)
     pub const EXTICR4: usize = 0x6C;
     /// Interrupt mask register 1
+    //! Reference: RM0456 Section 12.4.8: Interrupt mask register (EXTI_IMR1)
     pub const IMR1: usize = 0x80;
     /// Event mask register 1
+    //! Reference: RM0456 Section 12.4.9: Event mask register (EXTI_EMR1)
     pub const EMR1: usize = 0x84;
     /// Interrupt mask register 2
     pub const IMR2: usize = 0x90;

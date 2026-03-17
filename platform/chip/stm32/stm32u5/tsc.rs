@@ -1,14 +1,19 @@
 //! TSC - Touch Sensing Controller
 //! 触摸感应控制器
 //!
-//! STM32U5 TSC 特性：
-//! - 支持最多 24 个触摸感应通道
-//! - 支持电容感应
-//! - 可编程的充放电时间
-//! - 支持采样电容
-//! - 支持 DMA 传输
+//! ## STM32U5 TSC 特性 / Features
+//! - **通道数量 / Channels:** 最多 24 个触摸感应通道
+//! - **感应类型 / Sensing Types:** 电容感应 (Capacitive sensing)
+//! - **特性 / Features:**
+//!   - 可编程充放电时间 (Programmable charge/discharge time)
+//!   - 采样电容支持 (Sampling capacitor)
+//!   - DMA 传输支持
+//!   - 自动校准
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 59: Touch sensing controller (TSC)
 
-/// TSC base address
+/// TSC base address / TSC 基地址
 pub const TSC_BASE: usize = 0x4002_4000;
 
 /// TSC register offsets

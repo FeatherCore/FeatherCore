@@ -1,36 +1,101 @@
+//! ADF - Audio Digital Filter
+//! 音频数字滤波器
+//!
+//! ## STM32U5 ADF 特性 / Features
+//! - **SINC 滤波器 / SINC Filter:**
+//!   - 支持 Sinc1-Sinc5 阶滤波器
+//!   - 可编程过采样率 (OSR)
+//!   - 可编程高通滤波器 (HPF)
+//!
+//! - **时钟源 / Clock Sources:**
+//!   - 内部时钟生成器
+//!   - 外部时钟输入
+//!   - 可编程时钟分频 (1-128 分频)
+//!
+//! - **输出 / Output:**
+//!   - DMA 传输支持
+//!   - 单次或循环模式
+//!   - 左右声道数据输出
+//!
+//! - **触发源 / Trigger Sources:**
+//!   - 软件触发
+//!   - 硬件触发 (定时器, 外部中断等)
+//!   - 多达 8 个触发源
+//!
+//! - **辅助功能 / Auxiliary Features:**
+//!   - 输出电平检测 (OLD)
+//!   - 可编程增益控制
+//!   - 偏置校准
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 40: Audio digital filter (ADF)
+
 #![no_std]
 
 use core::ptr::{read_volatile, write_volatile};
 
+/// ADF1 base address / ADF1 基地址
+/// AHB1 bus, accessible at 0x4004_2000
 pub const ADF1_BASE: usize = 0x4004_2000;
 
+// ============================================================================
+// ADF Register Map / ADF 寄存器映射
+// ============================================================================
+
+/// ADF register structure / ADF 寄存器结构
 #[repr(C)]
 pub struct AdfRegs {
+    /// ADF Global Control Register / ADF 全局控制寄存器
     pub gcr: u32,
+    /// ADF Clock Generator Control Register / ADF 时钟生成控制寄存器
     pub ckgcr: u32,
+    /// ADF Spare Control Register / ADF 备用控制寄存器
     pub sparecr: u32,
+    /// ADF Spare Value Register / ADF 备用值寄存器
     pub spareval: u32,
+    /// ADF Filter Instance Control Register x / ADF 滤波器实例控制寄存器 x
     pub idcr: u32,
+    /// Reserved / 保留
     pub reserved1: [u32; 3],
+    /// ADF Digital Filter Control Register / ADF 数字滤波器控制寄存器
     pub dfltcr: u32,
+    /// ADF Digital Filter Channel Instance Control Register / ADF 数字滤波器通道实例控制寄存器
     pub dfltcicr: u32,
+    /// ADF Digital Filter MICSFILT Control Register / ADF 数字滤波器 MICSFILT 控制寄存器
     pub dfltmsicr: u32,
+    /// ADF Digital Filter Mode Register / ADF 数字滤波器模式寄存器
     pub dfltmdr: u32,
+    /// ADF Digital Filter Duration Register / ADF 数字滤波器持续时间寄存器
     pub dfltdur: u32,
+    /// ADF Digital Filter Interrupt Enable Register / ADF 数字滤波器中断使能寄存器
     pub dfltier: u32,
+    /// ADF Digital Filter Interrupt Status Register / ADF 数字滤波器中断状态寄存器
     pub dfltisr: u32,
+    /// ADF Digital Filter Status Interrupt Flag Register / ADF 数字滤波器状态中断标志寄存器
     pub dfltsifr: u32,
+    /// ADF Digital Filter Interrupt Flag Register / ADF 数字滤波器中断标志寄存器
     pub dfltifr: u32,
+    /// Reserved / 保留
     pub reserved2: u32,
+    /// ADF Digital Filter INCIR Register / ADF 数字滤波器 INCIR 寄存器
     pub dfltincr: u32,
+    /// Reserved / 保留
     pub reserved3: u32,
+    /// ADF Digital Filter RSFCL Control Register / ADF 数字滤波器 RSFCL 控制寄存器
     pub dfltrsfcr: u32,
+    /// Reserved / 保留
     pub reserved4: [u32; 2],
+    /// ADF Digital Filter Output Right Data Register / ADF 数字滤波器输出右数据寄存器
     pub dfltoutr: u32,
+    /// ADF Digital Filter Output Right Host Data Register / ADF 数字滤波器输出右主机数据寄存器
     pub dfltrdhr: u32,
+    /// Reserved / 保留
     pub reserved5: [u32; 2],
+    /// ADF Digital Filter Output Data Register / ADF 数字滤波器输出数据寄存器
     pub dfltoutdr: u32,
+    /// Reserved / 保留
     pub reserved6: [u32; 3],
+    /// ADF Digital Filter Trigger Control Register / ADF 数字滤波器触发控制寄存器
     pub dfltrgcr: u32,
     pub reserved7: [u32; 3],
     pub dfltgsr: u32,
@@ -43,62 +108,106 @@ pub struct AdfRegs {
 
 pub struct Adf;
 
-#[derive(Clone, Copy)]
+// ============================================================================
+// Enumerations / 枚举类型
+// ============================================================================
+
+/// SINC filter order / SINC 滤波器阶数
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SincOrder {
+    /// Fast SINC order / 快速 SINC 阶
     FastSinc = 0,
+    /// SINC1 order / SINC1 阶
     Sinc1 = 1,
+    /// SINC2 order / SINC2 阶
     Sinc2 = 2,
+    /// SINC3 order / SINC3 阶
     Sinc3 = 3,
+    /// SINC4 order / SINC4 阶
     Sinc4 = 4,
+    /// SINC5 order / SINC5 阶
     Sinc5 = 5,
 }
 
-#[derive(Clone, Copy)]
+/// Clock output prescaler / 时钟输出预分频器
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CkoPrescaler {
+    /// Clock divide by 1 / 时钟 1 分频
     Div1 = 0,
+    /// Clock divide by 2 / 时钟 2 分频
     Div2 = 1,
+    /// Clock divide by 4 / 时钟 4 分频
     Div4 = 2,
+    /// Clock divide by 8 / 时钟 8 分频
     Div8 = 3,
+    /// Clock divide by 16 / 时钟 16 分频
     Div16 = 4,
+    /// Clock divide by 32 / 时钟 32 分频
     Div32 = 5,
+    /// Clock divide by 64 / 时钟 64 分频
     Div64 = 6,
+    /// Clock divide by 128 / 时钟 128 分频
     Div128 = 7,
 }
 
-#[derive(Clone, Copy)]
+/// Clock output source / 时钟输出源
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CkoSrc {
+    /// Clock output 0 / 时钟输出 0
     Cko0 = 0,
+    /// Clock output 1 / 时钟输出 1
     Cko1 = 1,
 }
 
-#[derive(Clone, Copy)]
+/// Trigger source / 触发源
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Trgsrc {
+    /// Trigger source 0 / 触发源 0
     Trg0 = 0,
+    /// Trigger source 1 / 触发源 1
     Trg1 = 1,
+    /// Trigger source 2 / 触发源 2
     Trg2 = 2,
+    /// Trigger source 3 / 触发源 3
     Trg3 = 3,
+    /// Trigger source 4 / 触发源 4
     Trg4 = 4,
+    /// Trigger source 5 / 触发源 5
     Trg5 = 5,
+    /// Trigger source 6 / 触发源 6
     Trg6 = 6,
+    /// Trigger source 7 / 触发源 7
     Trg7 = 7,
 }
 
-#[derive(Clone, Copy)]
+/// DMA mode / DMA 模式
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DmaMode {
+    /// DMA disabled / DMA 禁用
     Disabled = 0,
+    /// DMA one-shot mode / DMA 单次模式
     OneShot = 1,
+    /// DMA circular mode / DMA 循环模式
     Circular = 2,
 }
 
-#[derive(Clone, Copy)]
+/// Processing delay / 处理延迟
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Procdly {
+    /// Delay 0 / 延迟 0
     Delay0 = 0,
+    /// Delay 1 / 延迟 1
     Delay1 = 1,
+    /// Delay 2 / 延迟 2
     Delay2 = 2,
+    /// Delay 3 / 延迟 3
     Delay3 = 3,
 }
 
+/// Filter configuration / 滤波器配置
+#[derive(Clone, Copy, Debug)]
 pub struct FilterConfig {
+    /// SINC filter order / SINC 滤波器阶数
     pub sinc_order: SincOrder,
     pub sinc_osr: u16,
     pub hpf_cutoff: u8,
@@ -167,7 +276,8 @@ impl Default for AudioConfig {
 }
 
 impl Adf {
-    pub fn new() -> Self {
+    /// Create new ADF instance / 创建新的 ADF 实例
+    pub const fn new() -> Self {
         Adf
     }
 

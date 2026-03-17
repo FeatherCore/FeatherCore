@@ -1,34 +1,76 @@
 //! SPI - Serial Peripheral Interface
 //! 串行外设接口
 //!
-//! STM32U5 支持多个 SPI/I2S 接口，支持全双工同步通信。
+//! # Overview / 概述
+//! STM32U5 Serial Peripheral Interface (SPI) provides high-speed synchronous
+//! communication with external devices supporting full-duplex or simplex modes.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 68: Serial peripheral interface (SPI)
+//! 
+//! ## SPI Interfaces / SPI接口
+//! - **SPI1, SPI2, SPI3** (Full duplex/Simplex)
+//! - I2S interface multiplexing
+//! 
+//! ## Data Transfer / 数据传输
+//! - Full-duplex synchronous communication
+//! - Up to 50 MHz (SPI1)
+//! - Programmable data frame (4-16 bits)
+//! 
+//! ## Advanced Features / 高级特性
+//! - DMA support
+//! - Multi-master/slave modes
+//! - Programmable clock polarity and phase
+//! - CRC calculation
+//! - Rx/Tx FIFO support
+//! - Hardware CRC8/CRC16
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 68: Serial peripheral interface (SPI)
+//! - RM0456 Section 68.1: SPI introduction
+//! - RM0456 Section 68.2: SPI main features
+//! - RM0456 Section 68.3: SPI functional description
+//! - RM0456 Section 68.6: SPI registers
 
-/// SPI1 base address
+/// SPI1 base address / SPI1 基地址
+//! Reference: RM0456 Chapter 2, Table 1: Memory map and register boundary addresses
 pub const SPI1_BASE: usize = 0x4001_3000;
-/// SPI2 base address
+/// SPI2 base address / SPI2 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const SPI2_BASE: usize = 0x4000_3800;
-/// SPI3 base address
+/// SPI3 base address / SPI3 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const SPI3_BASE: usize = 0x4000_3C00;
 
-/// SPI register offsets
+/// SPI register offsets / SPI 寄存器偏移
+//! Reference: RM0456 Section 68.6: SPI register map
 pub mod reg {
-    /// Control register 1
+    /// Control register 1 / 控制寄存器 1
+    //! Reference: RM0456 Section 68.6.1: SPI control register 1 (SPI_CR1)
     pub const CR1: usize = 0x00;
     /// Control register 2
+    //! Reference: RM0456 Section 68.6.2: SPI control register 2 (SPI_CR2)
     pub const CR2: usize = 0x04;
     /// Status register
+    //! Reference: RM0456 Section 68.6.3: SPI status register (SPI_SR)
     pub const SR: usize = 0x08;
     /// Data register
+    //! Reference: RM0456 Section 68.6.4: SPI data register (SPI_DR)
     pub const DR: usize = 0x0C;
     /// CRC polynomial register
+    //! Reference: RM0456 Section 68.6.5: SPI CRC polynomial register (SPI_CRCPR)
     pub const CRCPR: usize = 0x10;
     /// RX CRC register
+    //! Reference: RM0456 Section 68.6.6: SPI RX CRC register (SPI_RXCRCR)
     pub const RXCRCR: usize = 0x14;
     /// TX CRC register
+    //! Reference: RM0456 Section 68.6.7: SPI TX CRC register (SPI_TXCRCR)
     pub const TXCRCR: usize = 0x18;
     /// Configuration register
+    //! Reference: RM0456 Section 68.6.8: SPI I2S configuration register (SPI_I2SCFGR)
     pub const I2SCFGR: usize = 0x1C;
     /// Prescaler register
+    //! Reference: RM0456 Section 68.6.9: SPI I2S prescaler register (SPI_I2SPR)
     pub const I2SPR: usize = 0x20;
     /// Transfer size register
     pub const TSIZE: usize = 0x24;

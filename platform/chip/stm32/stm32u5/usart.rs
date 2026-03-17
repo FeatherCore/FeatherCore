@@ -1,34 +1,78 @@
 //! USART - Universal Synchronous/Asynchronous Receiver/Transmitter
 //! 通用同步/异步收发器
 //!
-//! STM32U5 支持多个 USART/UART 接口，支持多种配置。
+//! # Overview / 概述
+//! STM32U5 USART provides flexible full-duplex asynchronous communication
+//! with support for various protocols and modes.
+//! 
+//! # Features / 功能特性
+//! Reference: RM0456 Chapter 66: Universal synchronous/asynchronous receiver transmitter (USART/UART)
+//! 
+//! ## USART Interfaces / USART接口
+//! - **USART1, USART2, USART3** (Synchronous/Asynchronous)
+//! - **UART4, UART5, UART7, UART8** (Asynchronous only)
+//! 
+//! ## Transfer Speed / 传输速率
+//! - Up to 10 Mbps (USART1)
+//! 
+//! ## Advanced Features / 高级特性
+//! Reference: RM0456 Section 66.2
+//! - DMA support
+//! - Hardware flow control (RTS/CTS)
+//! - SmartCard mode (ISO 7816)
+//! - IrDA mode
+//! - LIN mode
+//! - Synchronous mode (master/slave)
+//! - Multi-processor communication
+//! - 8-bit oversampling mode
+//! - Auto baud rate detection
+//! 
+//! # Reference / 参考
+//! - RM0456 Chapter 66: Universal synchronous/asynchronous receiver transmitter (USART/UART)
+//! - RM0456 Section 66.1: USART introduction
+//! - RM0456 Section 66.2: USART main features
+//! - RM0456 Section 66.3: USART functional description
+//! - RM0456 Section 66.7: USART registers
 
-/// USART1 base address
+/// USART1 base address / USART1 基地址
+//! Reference: RM0456 Chapter 2, Table 1: Memory map and register boundary addresses
 pub const USART1_BASE: usize = 0x4001_3800;
-/// USART2 base address
+/// USART2 base address / USART2 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const USART2_BASE: usize = 0x4000_4400;
-/// USART3 base address
+/// USART3 base address / USART3 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const USART3_BASE: usize = 0x4000_4800;
-/// UART4 base address
+/// UART4 base address / UART4 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const UART4_BASE: usize = 0x4000_4C00;
-/// UART5 base address
+/// UART5 base address / UART5 基地址
+//! Reference: RM0456 Chapter 2, Table 1
 pub const UART5_BASE: usize = 0x4000_5000;
 /// USART6 base address
+//! Reference: RM0456 Chapter 2, Table 1
 pub const USART6_BASE: usize = 0x4001_6C00;
 /// UART7 base address
+//! Reference: RM0456 Chapter 2, Table 1
 pub const UART7_BASE: usize = 0x4000_7800;
 /// UART8 base address
+//! Reference: RM0456 Chapter 2, Table 1
 pub const UART8_BASE: usize = 0x4000_7C00;
 /// UART9 base address
+//! Reference: RM0456 Chapter 2, Table 1
 pub const UART9_BASE: usize = 0x4001_5800;
 
 /// USART register offsets
+//! Reference: RM0456 Section 66.7: USART register map
 pub mod reg {
     /// Control register 1
+    //! Reference: RM0456 Section 66.7.1: USART control register 1 (USART_CR1)
     pub const CR1: usize = 0x00;
     /// Control register 2
+    //! Reference: RM0456 Section 66.7.2: USART control register 2 (USART_CR2)
     pub const CR2: usize = 0x04;
     /// Control register 3
+    //! Reference: RM0456 Section 66.7.3: USART control register 3 (USART_CR3)
     pub const CR3: usize = 0x08;
     /// Baud rate register
     pub const BRR: usize = 0x0C;

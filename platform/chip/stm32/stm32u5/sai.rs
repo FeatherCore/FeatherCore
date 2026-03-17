@@ -1,15 +1,29 @@
 //! SAI - Serial Audio Interface
 //! 串行音频接口
 //!
-//! STM32U5 SAI 特性：
-//! - 两个独立的音频子模块（A 和 B）
-//! - 支持 I2S、LSB/MSB 对齐、PCM/DSP、TDM
-//! - 支持 SPDIF 输出
-//! - 支持 AC'97
-//! - 8 字 FIFO
-//! - 支持 DMA
+//! ## STM32U5 SAI 特性 / Features
+//! - **音频子模块 / Audio Sub-blocks:**
+//!   - 两个独立的音频子模块 (SAI_A 和 SAI_B)
+//!   - 支持全双工/半双工
+//!
+//! - **协议支持 / Protocol Support:**
+//!   - I2S (Philips 标准)
+//!   - LSB/MSB 对齐
+//!   - PCM/DSP 模式
+//!   - TDM (Time Division Multiplexing)
+//!   - SPDIF 输出
+//!   - AC'97
+//!
+//! - **特性 / Features:**
+//!   - 8 字 FIFO
+//!   - DMA 支持
+//!   - 可编程时钟分频
+//!   - 多种数据格式
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 57: Serial audio interface (SAI)
 
-/// SAI1 base address
+/// SAI1 base address / SAI1 基地址
 pub const SAI1_BASE: usize = 0x4001_5400;
 /// SAI2 base address
 pub const SAI2_BASE: usize = 0x4001_5800;

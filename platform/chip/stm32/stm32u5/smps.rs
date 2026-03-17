@@ -1,13 +1,22 @@
 //! SMPS - Switched-Mode Power Supply Controller
 //! 开关电源控制器
 //!
-//! STM32U5 SMPS 特性:
-//! - 内部 SMPS 降压转换器
-//! - 可编程输出电压 (1.0V - 1.8V)
-//! - 支持 bypass 模式
-//! - 低功耗模式支持
+//! ## STM32U5 SMPS 特性 / Features
+//! - **电源类型 / Power Type:** 内部 SMPS 降压转换器 (Buck converter)
+//! - **输出电压 / Output Voltage:** 可编程 1.0V - 1.8V
+//! - **工作模式 / Operating Modes:**
+//!   - SMPS 模式 (Switched-Mode)
+//!   - Bypass 模式 (LDO)
+//!
+//! - **特性 / Features:**
+//!   - 低功耗模式支持
+//!   - 可编程电流限制
+//!   - 软启动
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 10: Power control (PWR) - SMPS
 
-/// SMPS base address
+/// SMPS base address / SMPS 基地址
 pub const SMPS_BASE: usize = 0x4201_E000;
 
 /// SMPS register offsets

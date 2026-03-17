@@ -1,82 +1,166 @@
+//! UCPD - USB Power Delivery Controller
+//! USB 电源传输控制器
+//!
+//! ## STM32U5 UCPD 特性 / Features
+//! - **USB PD 协议 / USB PD Protocol:**
+//!   - 支持 USB Power Delivery 规范
+//!   - 源 (Source) 和受体 (Sink) 角色
+//!   - 双角色设备 (DRD) 支持
+//!
+//! - **物理层 / Physical Layer:"
+//!   - CC (Configuration Channel) 引脚管理
+//!   - 可编程 Rp/Rd 电阻
+//!   - BMC 编码/解码
+//!
+//! - **消息传输 / Message Transfer:"
+//!   - 可编程消息有序集
+//!   - 可配置有效载荷大小
+//!   - DMA 支持
+//!
+//! - **事件处理 / Event Handling:"
+//!   - 中断支持
+//!   - 状态监测
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 42: USB Power Delivery controller
+
 #![no_std]
 
 use core::ptr::{read_volatile, write_volatile};
 
+/// UCPD1 base address / UCPD1 基地址
+/// AHB bus, accessible at 0x4000_DC00
 pub const UCPD1_BASE: usize = 0x4000_DC00;
+/// UCPD2 base address / UCPD2 基地址
 pub const UCPD2_BASE: usize = 0x4000_E000;
 
+// ============================================================================
+// UCPD Register Map / UCPD 寄存器映射
+// ============================================================================
+
+/// UCPD Register Structure / UCPD 寄存器结构
 #[repr(C)]
 pub struct UcpdRegs {
+    /// UCPD Configuration Register 1 / UCPD 配置寄存器 1
     pub cfg1: u32,
+    /// UCPD Configuration Register 2 / UCPD 配置寄存器 2
     pub cfg2: u32,
+    /// UCPD Control Register / UCPD 控制寄存器
     pub cr: u32,
+    /// UCPD Interrupt Mask Register / UCPD 中断屏蔽寄存器
     pub imr: u32,
+    /// UCPD Status Register / UCPD 状态寄存器
     pub sr: u32,
+    /// UCPD Interrupt Clear Register / UCPD 中断清除寄存器
     pub icr: u32,
+    /// UCPD TX Ordered Set Register / UCPD 发送有序集寄存器
     pub tx_ordset: u32,
+    /// UCPD TX Payload Size Register / UCPD 发送有效载荷大小寄存器
     pub tx_paysz: u32,
+    /// UCPD TX Data Register / UCPD 发送数据寄存器
     pub txdr: u32,
+    /// UCPD RX Ordered Set Register / UCPD 接收有序集寄存器
     pub rx_ordset: u32,
+    /// UCPD RX Payload Size Register / UCPD 接收有效载荷大小寄存器
     pub rx_paysz: u32,
+    /// UCPD RX Data Register / UCPD 接收数据寄存器
     pub rxdr: u32,
+    /// UCPD RX Ordered Set Extension 1 Register / UCPD 接收有序集扩展寄存器 1
     pub rx_ordext1: u32,
+    /// UCPD RX Ordered Set Extension 2 Register / UCPD 接收有序集扩展寄存器 2
     pub rx_ordext2: u32,
 }
 
+/// UCPD instance / UCPD 实例
 pub struct Ucpd {
+    /// Base address / 基地址
     base: usize,
 }
 
-#[derive(Clone, Copy)]
+/// UCPD instance selection / UCPD 实例选择
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Instance {
+    /// UCPD1 instance / UCPD1 实例
     Ucpd1 = 1,
+    /// UCPD2 instance / UCPD2 实例
     Ucpd2 = 2,
 }
 
-#[derive(Clone, Copy)]
+/// CC pin selection / CC 引脚选择
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CcSel {
+    /// CC1 selected / 选择 CC1
     Cc1 = 0,
+    /// CC2 selected / 选择 CC2
     Cc2 = 1,
 }
 
-#[derive(Clone, Copy)]
+/// CC Rp (Source) value / CC Rp (源端) 值
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CcRp {
+    /// Default Rp (USB Default Power) / 默认 Rp (USB 默认功率)
     Default = 0,
+    /// 1.5A current capability / 1.5A 电流能力
     Power15A = 1,
+    /// 3.0A current capability / 3.0A 电流能力
     Power30A = 2,
+    /// USB Power (reserved) / USB 功率 (保留)
     PowerUsb = 3,
 }
 
-#[derive(Clone, Copy)]
+/// CC Detection (Sink) mode / CC 检测 (受体) 模式
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PsCcdet {
+    /// Disabled / 禁用
     Disabled = 0,
+    /// Vsrc Default / Vsrc 默认
     VsrcDef = 1,
+    /// Vsrc 1.5V / Vsrc 1.5V
     Vsrc1500 = 2,
+    /// Vsrc 3.0V / Vsrc 3.0V
     Vsrc3000 = 3,
 }
 
-#[derive(Clone, Copy)]
+/// H-bit clock divider / H 位时钟分频器
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Hbitclkdiv {
+    /// Clock divide by 1 / 时钟 1 分频
     Div1 = 0,
+    /// Clock divide by 2 / 时钟 2 分频
     Div2 = 1,
+    /// Clock divide by 4 / 时钟 4 分频
     Div4 = 2,
+    /// Clock divide by 8 / 时钟 8 分频
     Div8 = 3,
 }
 
-#[derive(Clone, Copy)]
+/// UCPD role / UCPD 角色
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum UcpdRole {
+    /// Sink (Power Consumer) / 受体 (功率消耗者)
     Sink = 0,
+    /// Source (Power Provider) / 源端 (功率提供者)
     Source = 1,
+    /// Dual Role Device / 双角色设备
     Drd = 2,
 }
 
+/// UCPD configuration / UCPD 配置
+#[derive(Clone, Copy, Debug)]
 pub struct Config {
+    /// CC pin selection / CC 引脚选择
     pub cc_sel: CcSel,
+    /// CC Rp value / CC Rp 值
     pub cc_rp: CcRp,
+    /// CC Rd enable / CC Rd 使能
     pub cc_rd: bool,
+    /// Power detection mode / 功率检测模式
     pub ps_ccdet: PsCcdet,
+    /// H-bit clock divider / H 位时钟分频器
     pub hbitclkdiv: Hbitclkdiv,
+    /// UCPD role / UCPD 角色
     pub ucpd_role: UcpdRole,
+    /// FRS RX enable / 快速角色交换接收使能
     pub frs_rx_en: bool,
     pub frs_tx_en: bool,
     pub rx_dma_en: bool,

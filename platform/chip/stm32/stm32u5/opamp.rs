@@ -1,13 +1,22 @@
 //! OPAMP - Operational Amplifier
 //! 运算放大器
 //!
-//! STM32U5 OPAMP 特性：
-//! - 最多 3 个独立运算放大器
-//! - 支持多种工作模式
-//! - 支持内部跟随器、PGA、外部增益
-//! - 支持校准功能
+//! ## STM32U5 OPAMP 特性 / Features
+//! - **运算放大器数量 / Op-amp Count:** 最多 3 个独立运算放大器
+//! - **工作模式 / Operating Modes:**
+//!   - 跟随器模式 (Follower mode)
+//!   - PGA 模式 (Programmable Gain Amplifier)
+//!   - 外部增益模式 (External gain)
+//!
+//! - **特性 / Features:**
+//!   - 可编程增益 (1-16)
+//!   - 校准功能 (Calibration)
+//!   - 低功耗模式
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 36: Operational amplifiers (OPAMP)
 
-/// OPAMP1 base address
+/// OPAMP1 base address / OPAMP1 基地址
 pub const OPAMP1_BASE: usize = 0x4000_9030;
 /// OPAMP2 base address
 pub const OPAMP2_BASE: usize = 0x4000_9034;

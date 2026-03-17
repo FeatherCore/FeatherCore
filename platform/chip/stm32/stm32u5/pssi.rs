@@ -1,54 +1,112 @@
+//! PSSI - Parallel Synchronous Slave Interface
+//! 并行同步从接口
+//!
+//! ## STM32U5 PSSI 特性 / Features
+//! - **数据宽度 / Data Width:**
+//!   - 8-bit 数据传输
+//!   - 16-bit 数据传输
+//!
+//! - **接口特性 / Interface Features:**
+//!   - 并行同步从接口
+//!   - DMA 支持
+//!   - 可编程控制信号
+//!   - 准备好 (Ready) 信号支持
+//!
+//! - **传输模式 / Transfer Modes:**
+//!   - 连续模式
+//!   - 非连续模式
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 51: Parallel synchronous slave interface (PSSI)
+
 #![no_std]
 
 use core::ptr::{read_volatile, write_volatile};
 
+/// PSSI base address / PSSI 基地址
+/// AHB1 bus, accessible at 0x4004_0400
 pub const PSSI_BASE: usize = 0x4004_0400;
 
+// ============================================================================
+// PSSI Register Map / PSSI 寄存器映射
+// ============================================================================
+
+/// PSSI Register Structure / PSSI 寄存器结构
 #[repr(C)]
 pub struct PssiRegs {
+    /// PSSI Control Register / PSSI 控制寄存器
     pub cr: u32,
+    /// PSSI Status Register / PSSI 状态寄存器
     pub sr: u32,
+    /// PSSI Raw Interrupt Status Register / PSSI 原始中断状态寄存器
     pub risr: u32,
+    /// PSSI Interrupt Enable Register / PSSI 中断使能寄存器
     pub ier: u32,
+    /// PSSI Masked Interrupt Status Register / PSSI 屏蔽中断状态寄存器
     pub misr: u32,
+    /// PSSI Interrupt Clear Register / PSSI 中断清除寄存器
     pub icr: u32,
+    /// PSSI Data Register / PSSI 数据寄存器
     pub dr: u32,
 }
 
+/// PSSI instance / PSSI 实例
 pub struct Pssi;
 
-#[derive(Clone, Copy)]
+/// Data width / 数据宽度
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DataWidth {
+    /// 8-bit data width / 8位数据宽度
     Bits8 = 0,
+    /// 16-bit data width / 16位数据宽度
     Bits16 = 1,
 }
 
-#[derive(Clone, Copy)]
+/// Bus width / 总线宽度
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BusWidth {
+    /// 8-bit bus width / 8位总线宽度
     Bits8 = 0,
+    /// 16-bit bus width / 16位总线宽度
     Bits16 = 1,
 }
 
-#[derive(Clone, Copy)]
+/// Control signal / 控制信号
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ControlSignal {
+    /// Both PCLK and PDEN / PCLK 和 PDEN 都使用
     Both = 0,
+    /// PCLK only / 仅使用 PCLK
     PclkOnly = 1,
+    /// PDEN only / 仅使用 PDEN
     PdenOnly = 2,
 }
 
-#[derive(Clone, Copy)]
+/// Ready polarity / 准备好极性
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ReadyPolarity {
+    /// Active low / 低电平有效
     ActiveLow = 0,
+    /// Active high / 高电平有效
     ActiveHigh = 1,
 }
 
+/// PSSI configuration / PSSI 配置
+#[derive(Clone, Copy, Debug)]
 pub struct Config {
+    /// Data width / 数据宽度
     pub data_width: DataWidth,
+    /// Bus width / 总线宽度
     pub bus_width: BusWidth,
+    /// Control signal / 控制信号
     pub control_signal: ControlSignal,
+    /// Ready polarity / 准备好极性
     pub ready_polarity: ReadyPolarity,
+    /// Output enable / 输出使能
     pub outen_enable: bool,
+    /// DMA enable / DMA 使能
     pub dma_enable: bool,
+    /// Continuous mode / 连续模式
     pub continuous: bool,
 }
 
@@ -66,8 +124,12 @@ impl Default for Config {
     }
 }
 
+/// PSSI transfer descriptor / PSSI 传输描述符
+#[derive(Clone, Copy, Debug)]
 pub struct PssiTransfer {
+    /// Data pointer / 数据指针
     pub data_ptr: *const u8,
+    /// Transfer length / 传输长度
     pub length: usize,
 }
 

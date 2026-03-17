@@ -1,14 +1,28 @@
 //! OctoSPI - Octal Serial Peripheral Interface
 //! 八线串行外设接口
 //!
-//! STM32U5 OctoSPI 特性：
-//! - 支持单/双/四/八线 SPI
-//! - 支持 NOR Flash、PSRAM、HyperBus
-//! - 支持内存映射模式
-//! - 支持 XIP (Execute In Place)
-//! - 最高 160 MB/s 吞吐量
+//! ## STM32U5 OctoSPI 特性 / Features
+//! - **数据线模式 / Data Line Modes:**
+//!   - 单线 SPI (Single SPI)
+//!   - 双线 SPI (Dual SPI)
+//!   - 四线 SPI (Quad SPI)
+//!   - 八线 SPI (Octal SPI)
+//!
+//! - **支持的设备 / Supported Devices:**
+//!   - NOR Flash
+//!   - PSRAM
+//!   - HyperBus 设备
+//!
+//! - **特性 / Features:**
+//!   - 内存映射模式 (Memory-mapped mode)
+//!   - XIP (Execute In Place) 支持
+//!   - 最高 160 MB/s 吞吐量
+//!   - DMA 支持
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 55: OctoSPI interface (OCTOSPI)
 
-/// OctoSPI1 base address
+/// OCTOSPI1 base address / OCTOSPI1 基地址
 pub const OCTOSPI1_BASE: usize = 0x420C_0000;
 /// OctoSPI2 base address
 pub const OCTOSPI2_BASE: usize = 0x420C_0400;

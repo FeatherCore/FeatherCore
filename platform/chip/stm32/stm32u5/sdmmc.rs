@@ -1,15 +1,27 @@
 //! SDMMC - Secure Digital MultiMedia Card
 //! SD/SDIO/MMC 接口
 //!
-//! STM32U5 SDMMC 特性：
-//! - 支持 SD/SDIO/MMC 卡
-//! - 支持 SD 存储卡标准 4.2
-//! - 支持 SDIO 卡标准 2.0
-//! - 支持 eMMC 标准 4.51
-//! - 8-bit 数据总线宽度
-//! - 支持 DMA 传输
+//! ## STM32U5 SDMMC 特性 / Features
+//! - **支持卡类型 / Supported Cards:**
+//!   - SD 存储卡 (SD Card)
+//!   - SDIO 卡 (SDIO Card)
+//!   - eMMC 卡 (Embedded MMC)
+//!
+//! - **标准支持 / Standards Support:**
+//!   - SD 存储卡标准 4.2 (SD Memory Card Standard 4.2)
+//!   - SDIO 卡标准 2.0 (SDIO Card Standard 2.0)
+//!   - eMMC 标准 4.51 (eMMC Standard 4.51)
+//!
+//! - **特性 / Features:**
+//!   - 8-bit 数据总线宽度
+//!   - DMA 传输支持
+//!   - 高速模式 (High Speed)
+//!   - SDR (Single Data Rate) / DDR (Double Data Rate) 模式
+//!
+//! ## Reference / 参考
+//! - RM0456 Reference Manual, Chapter 58: Secure digital input/output interface (SDMMC)
 
-/// SDMMC1 base address
+/// SDMMC1 base address / SDMMC1 基地址
 pub const SDMMC1_BASE: usize = 0x420C_8000;
 /// SDMMC2 base address
 pub const SDMMC2_BASE: usize = 0x420C_8C00;
