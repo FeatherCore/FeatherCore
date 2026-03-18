@@ -157,6 +157,7 @@
 #![allow(unused)]
 
 // Public modules / 公共模块
+pub mod map;
 pub mod rcc;
 pub mod gpio;
 pub mod usart;
