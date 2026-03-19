@@ -7,9 +7,21 @@
 [submodule "platform/board"]
 	path = platform/board
 	url = git@github.com:FeatherCore/FeatherBoard.git
+[submodule "common/driver"]
+	path = common/driver
+	url = git@github.com:FeatherCore/FeatherDriver.git
+[submodule "common/platform"]
+	path = common/platform
+	url = git@github.com:FeatherCore/FeatherPlatform.git
+[submodule "common/sys"]
+	path = common/sys
+	url = git@github.com:FeatherCore/FeatherSys.git
 [submodule "boot"]
 	path = boot
 	url = git@github.com:FeatherCore/FeatherBoot.git
 [submodule "kernel"]
 	path = kernel
 	url = git@github.com:FeatherCore/FeatherKernel.git
+[submodule "rootfs"]
+	path = rootfs
+	url = git@github.com:FeatherCore/FeatherRootfs.git
