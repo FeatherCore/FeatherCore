@@ -1,0 +1,6 @@
+[submodule "platform/chip"]
+	path = platform/chip
+	url = git@github.com:FeatherCore/FeatherChip.git
+[submodule "platform/arch"]
+	path = platform/arch
+	url = git@github.com:FeatherCore/FeatherArch.git
