@@ -7,3 +7,6 @@
 [submodule "platform/board"]
 	path = platform/board
 	url = git@github.com:FeatherCore/FeatherBoard.git
+[submodule "kernel"]
+	path = kernel
+	url = git@github.com:FeatherCore/FeatherCore.git
