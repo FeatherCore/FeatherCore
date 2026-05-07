@@ -1,0 +1,8 @@
+[submodule "nuttx"]
+	path = nuttx
+	url = ssh://git@ssh.github.com:443/FeatherCore/nuttx.git
+	branch = develop
+[submodule "apps"]
+	path = apps
+	url = ssh://git@ssh.github.com:443/FeatherCore/nuttx-apps.git
+	branch = develop
