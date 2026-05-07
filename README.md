@@ -7,6 +7,7 @@ submodules:
 
 ```text
 Feather/
+├── docs/   -> workflow and board porting notes
 ├── nuttx/  -> https://github.com/FeatherCore/nuttx
 └── apps/   -> https://github.com/FeatherCore/nuttx-apps
 ```
