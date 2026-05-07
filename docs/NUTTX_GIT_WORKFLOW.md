@@ -11,6 +11,7 @@ Feather super-project 下的 Git submodule。
 ```text
 /home/uan-wsl2/Feather/
 ├── docs/
+├── build/
 ├── nuttx/   submodule -> FeatherCore/nuttx
 └── apps/    submodule -> FeatherCore/nuttx-apps
 ```
@@ -204,7 +205,19 @@ make -j8
 cd /home/uan-wsl2/Feather/nuttx
 ./boards/arm/stm32h7rs/stm32h7s78-dk/tools/mk-nxboot-app.sh \
   -i nuttx.bin \
-  -o ../stm32h7s78-dk-nxboot-app.bin
+  -o ../build/stm32h7s78-dk-nxboot-app.bin
+```
+
+如果不指定 `-o`，H7RS app 打包脚本也会默认输出到：
+
+```text
+../build/stm32h7s78-dk-nxboot-app.bin
+```
+
+也就是：
+
+```text
+/home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-app.bin
 ```
 
 ## 同步 Apache 主线

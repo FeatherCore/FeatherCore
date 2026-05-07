@@ -8,6 +8,7 @@ submodules:
 ```text
 Feather/
 ├── docs/   -> workflow and board porting notes
+├── build/  -> local firmware output directory
 ├── nuttx/  -> https://github.com/FeatherCore/nuttx
 └── apps/   -> https://github.com/FeatherCore/nuttx-apps
 ```

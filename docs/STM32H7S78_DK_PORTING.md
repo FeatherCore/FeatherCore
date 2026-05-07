@@ -1,12 +1,13 @@
 # STM32H7S78-DK NuttX Porting Notes
 
-本文档记录 `/home/uan-wsl2/nuttx-work` 中 STM32H7S78-DK 的 NuttX 移植状态。当前目标是让内部 Flash 中的 `nxboot-loader` 对齐 Cube `Template_XIP_Custom/Boot` 的核心能力：UART4、XSPI2 NOR、XSPI1 PSRAM，然后从外部 XSPI2 NOR 读取 app image 并跳转。
+本文档记录 `/home/uan-wsl2/Feather` 中 STM32H7S78-DK 的 NuttX 移植状态。当前目标是让内部 Flash 中的 `nxboot-loader` 对齐 Cube `Template_XIP_Custom/Boot` 的核心能力：UART4、XSPI2 NOR、XSPI1 PSRAM，然后从外部 XSPI2 NOR 读取 app image 并跳转。
 
 ## 当前分支
 
 ```text
-nuttx: /home/uan-wsl2/nuttx-work/nuttx -> vendor/stm32h7rs-bringup
-apps:  /home/uan-wsl2/nuttx-work/apps  -> vendor/stm32h7rs-bringup
+Feather: /home/uan-wsl2/Feather       -> main
+nuttx:   /home/uan-wsl2/Feather/nuttx -> develop
+apps:    /home/uan-wsl2/Feather/apps  -> develop
 ```
 
 ## 目录设计
@@ -160,9 +161,9 @@ nuttx.bin = 83480 bytes
 当前保留的构建产物：
 
 ```text
-/home/uan-wsl2/nuttx-work/nuttx/nuttx.bin              当前为 nxboot-loader
-/home/uan-wsl2/nuttx-work/nuttx-nxboot-loader.bin      nxboot-loader 备份
-/home/uan-wsl2/nuttx-work/nuttx-nxboot-app.bin         nxboot-app 未加 NXboot header 的原始 app 镜像
+/home/uan-wsl2/Feather/nuttx/nuttx.bin                 当前配置的 raw build output
+/home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-app.bin
+                                                        nxboot-app 加 NXboot header 后的烧录镜像
 ```
 
 ## OTA 分区
@@ -244,7 +245,7 @@ XSPI2 regs CR=10000001 SR=00000000 DCR1=011b0100 DCR2=00000001 CCR=01000001 TCR=
 已执行：
 
 ```bash
-cd /home/uan-wsl2/nuttx-work/nuttx
+cd /home/uan-wsl2/Feather/nuttx
 
 make distclean
 ./tools/configure.sh stm32h7s78-dk:nxboot-loader
@@ -261,7 +262,7 @@ make -j8
 nxboot-loader:
   flash used: 54904 B / 64 KiB = 83.78%
   sram used:  7832 B / 456 KiB = 1.68%
-  binary:     /home/uan-wsl2/nuttx-work/nuttx-nxboot-loader.bin
+  binary:     /home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-loader.bin
   size:       54904 bytes
 
 nxboot-app:
@@ -269,11 +270,11 @@ nxboot-app:
   sram used:  8024 B / 456 KiB = 1.72%
   link addr:  0x70000400
   extram used: 0 B / 32 MiB
-  raw binary: /home/uan-wsl2/nuttx-work/nuttx-nxboot-app.bin
+  raw binary: /home/uan-wsl2/Feather/nuttx/nuttx.bin
   raw size:   83480 bytes
 
 packaged app image:
-  binary:     /home/uan-wsl2/nuttx-work/stm32h7s78-dk-nxboot-app.bin
+  binary:     /home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-app.bin
   size:       84504 bytes
   program at: 0x70000000
   header:     0x400 bytes
@@ -374,13 +375,13 @@ help
 
 ```text
 内部 Flash 0x08000000:
-  /home/uan-wsl2/nuttx-work/nuttx-nxboot-loader.bin
+  /home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-loader.bin
 
 外部 XSPI2 NOR 0x70000000:
-  /home/uan-wsl2/nuttx-work/stm32h7s78-dk-nxboot-app.bin
+  /home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-app.bin
 
 不要把 raw app 烧到 0x70000000:
-  /home/uan-wsl2/nuttx-work/nuttx-nxboot-app.bin
+  /home/uan-wsl2/Feather/nuttx/nuttx.bin
 ```
 
 ## 后续任务
