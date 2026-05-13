@@ -6,3 +6,7 @@
 	path = apps
 	url = ssh://git@ssh.github.com:443/FeatherCore/nuttx-apps.git
 	branch = develop
+[submodule "stacks/fgfx"]
+	path = stacks/fgfx
+	url = ssh://git@ssh.github.com:443/FeatherCore/graphics.git
+	branch = main

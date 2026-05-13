@@ -1,16 +1,17 @@
 # STM32U5x9J-DK NuttX Porting Notes
 
-This document tracks the STM32U5x9J-DK port in:
+This document tracks the STM32U5x9J-DK port in the Feather super-project:
 
 ```text
-/home/uan-wsl2/nuttx-work
+/home/uan-wsl2/Feather
 ```
 
-Current branch:
+Current development branch:
 
 ```text
-nuttx: /home/uan-wsl2/nuttx-work/nuttx -> vendor/stm32u5x9-bringup
-apps:  /home/uan-wsl2/nuttx-work/apps  -> vendor/stm32u5x9-bringup
+Feather: /home/uan-wsl2/Feather       -> main
+nuttx:   /home/uan-wsl2/Feather/nuttx -> develop
+apps:    /home/uan-wsl2/Feather/apps  -> develop
 ```
 
 ## Scope
@@ -372,7 +373,7 @@ Static-source completion status:
 Verified on 2026-05-07:
 
 ```bash
-cd /home/uan-wsl2/nuttx-work/nuttx
+cd /home/uan-wsl2/Feather/nuttx
 make distclean
 ./tools/configure.sh stm32u5x9j-dk:nsh
 make -j8

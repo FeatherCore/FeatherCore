@@ -7,10 +7,12 @@ submodules:
 
 ```text
 Feather/
-├── docs/   -> workflow and board porting notes
-├── build/  -> local firmware output directory
-├── nuttx/  -> https://github.com/FeatherCore/nuttx
-└── apps/   -> https://github.com/FeatherCore/nuttx-apps
+├── nuttx/      -> https://github.com/FeatherCore/nuttx
+├── apps/       -> https://github.com/FeatherCore/nuttx-apps
+├── stacks/     -> portable Feather protocol/runtime stacks
+├── tools/      -> build, packaging, flashing and release helpers
+├── docs/       -> workflow and board porting notes
+└── build/      -> local firmware output directory
 ```
 
 Both submodules track the `develop` branch and are pinned by this repository
@@ -35,6 +37,6 @@ To move both submodules to the latest `origin/develop` commits:
 ```bash
 git submodule update --remote --merge
 git status
-git add nuttx apps .gitmodules
+git add nuttx apps stacks .gitmodules
 git commit -s -m "Update NuttX submodules"
 ```

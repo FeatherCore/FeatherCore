@@ -1,8 +1,8 @@
 # Feather NuttX Git Workflow
 
 本文档记录 FeatherCore 当前的 NuttX 开发工作流。现在以
-`/home/uan-wsl2/Feather` 作为主开发入口；`nuttx` 和 `apps` 是
-Feather super-project 下的 Git submodule。
+`/home/uan-wsl2/Feather` 作为主开发入口；`nuttx`、`apps` 以及通用
+Feather 协议栈都作为 Feather super-project 下的 Git submodule 维护。
 
 ## 当前工作区
 
@@ -10,20 +10,25 @@ Feather super-project 下的 Git submodule。
 
 ```text
 /home/uan-wsl2/Feather/
+├── nuttx/      submodule -> FeatherCore/nuttx
+├── apps/       submodule -> FeatherCore/nuttx-apps
+├── stacks/
+│   └── fgfx/   submodule -> FeatherCore/graphics
+├── tools/
 ├── docs/
-├── build/
-├── nuttx/   submodule -> FeatherCore/nuttx
-└── apps/    submodule -> FeatherCore/nuttx-apps
+└── build/
 ```
 
 当前子模块锁定状态：
 
 ```text
-nuttx: 3cdb76c610238e754b0828a77864db27812f18d9
+nuttx: e2aa04fb4fc11d279c2648d83c1829ae933454a0
 apps:  7bae6e591d557035c7d44be84f49163bbd883f84
+fgfx:  d8dae5ced3a89c4a9e678d7f0c8947e1905c479b
 ```
 
-这两个 commit 都来自各自仓库的 `develop` 分支。
+`nuttx` 和 `apps` 来自各自仓库的 `develop` 分支；`fgfx` 来自
+`FeatherCore/graphics` 的 `main` 分支。
 
 旧目录 `/home/uan-wsl2/nuttx-work/nuttx` 和
 `/home/uan-wsl2/nuttx-work/apps` 仍可作为历史/临时工作区参考，但后续主线开发
@@ -52,6 +57,14 @@ NuttX apps submodule：
 path   -> /home/uan-wsl2/Feather/apps
 origin -> ssh://git@ssh.github.com:443/FeatherCore/nuttx-apps.git
 branch -> develop
+```
+
+Feather Graphics stack submodule：
+
+```text
+path   -> /home/uan-wsl2/Feather/stacks/fgfx
+origin -> ssh://git@ssh.github.com:443/FeatherCore/graphics.git
+branch -> main
 ```
 
 `nuttx` 和 `apps` 仓库仍建议保留 Apache 主线远程：
@@ -185,40 +198,29 @@ submodule 指针更新，否则 Feather 远程不会记录新的组合版本。
 NuttX 构建仍在 `nuttx/` 子模块中执行。`apps/` 与 `nuttx/` 并列，符合
 NuttX 默认目录布局。
 
-示例：
+H7RS NXboot 与 NSH app 可以用 Feather 工程级脚本一次完成构建、打包和复制：
 
 ```bash
-cd /home/uan-wsl2/Feather/nuttx
-
-make distclean
-./tools/configure.sh stm32h7s78-dk:nxboot-loader
-make -j8
-
-make distclean
-./tools/configure.sh stm32h7s78-dk:nxboot-app
-make -j8
+cd /home/uan-wsl2/Feather
+./tools/firmware/stm32h7s78-dk/build-nsh.sh -j 8
 ```
 
-打包 H7RS NXboot app：
-
-```bash
-cd /home/uan-wsl2/Feather/nuttx
-./boards/arm/stm32h7rs/stm32h7s78-dk/tools/mk-nxboot-app.sh \
-  -i nuttx.bin \
-  -o ../build/stm32h7s78-dk-nxboot-app.bin
-```
-
-如果不指定 `-o`，H7RS app 打包脚本也会默认输出到：
+输出统一写入 Feather 根目录的 `build/`：
 
 ```text
-../build/stm32h7s78-dk-nxboot-app.bin
+build/stm32h7s78-dk-nxboot.bin
+build/stm32h7s78-dk-nsh.bin
 ```
 
-也就是：
+烧录关系：
 
 ```text
-/home/uan-wsl2/Feather/build/stm32h7s78-dk-nxboot-app.bin
+0x08000000 -> stm32h7s78-dk-nxboot.bin
+0x70000000 -> stm32h7s78-dk-nsh.bin
 ```
+
+`stm32h7s78-dk-nsh.bin` 的结构是 `[NXboot header][NuttX app raw binary]`；
+raw app 只作为构建过程中的 `nuttx.bin` 中间产物存在，不复制到 `build/`。
 
 ## 同步 Apache 主线
 

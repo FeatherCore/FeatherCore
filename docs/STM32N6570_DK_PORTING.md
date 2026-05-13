@@ -108,9 +108,9 @@ by `apps/boot/nxboot/tools/nximage.py`.
     last diagnostic result.
   - `CONFIG_STM32N6_EXTNOR_SCRATCH_TEST` defaults to `n`; when explicitly
     enabled, `/dev/nordiag0` accepts a manual tail scratch-sector test only.
-- Added helper scripts:
-  - `tools/mk-nxboot-app.sh`
-  - `tools/sign-fsbl.sh`
+- Added Feather firmware helper scripts:
+  - `tools/firmware/stm32n6570-dk/mk-nxboot-app.sh`
+  - `tools/firmware/stm32n6570-dk/sign-fsbl.sh`
 
 ## External Memory Layout
 
@@ -208,7 +208,7 @@ port.
 ## Build Commands
 
 ```bash
-cd /home/uan-wsl2/nuttx-work/nuttx
+cd /home/uan-wsl2/Feather/nuttx
 
 make distclean
 ./tools/configure.sh stm32n6570-dk:nxboot-fsbl
@@ -243,18 +243,22 @@ Static build verification completed on 2026-05-07:
 FSBL payload:
 
 ```bash
-boards/arm/stm32n6/stm32n6570-dk/tools/sign-fsbl.sh \
+cd /home/uan-wsl2/Feather
+
+./tools/firmware/stm32n6570-dk/sign-fsbl.sh \
   /path/to/STM32_SigningTool_CLI \
-  nuttx.bin \
-  /home/uan-wsl2/nuttx-work/stm32n6570-dk-nxboot-fsbl-trusted.bin
+  nuttx/nuttx.bin \
+  build/stm32n6570-dk-nxboot-fsbl-trusted.bin
 ```
 
 Application image:
 
 ```bash
-boards/arm/stm32n6/stm32n6570-dk/tools/mk-nxboot-app.sh \
-  nuttx.bin \
-  /home/uan-wsl2/nuttx-work/stm32n6570-dk-nxboot-app.img
+cd /home/uan-wsl2/Feather
+
+./tools/firmware/stm32n6570-dk/mk-nxboot-app.sh \
+  nuttx/nuttx.bin \
+  build/stm32n6570-dk-nxboot-app.img
 ```
 
 Burn addresses:
