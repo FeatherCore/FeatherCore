@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ############################################################################
-# tools/firmware/stm32h7s78-dk/build-nsh.sh
+# tools/firmware/stm32h7s78-dk/build-knsh.sh
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -26,13 +26,14 @@ set -euo pipefail
 usage()
 {
   printf 'Usage: %s [OPTIONS]\n\n' "$0"
-  printf 'Build STM32H7S78-DK NXboot and NSH NXboot app firmware.\n\n'
+  printf 'Build STM32H7S78-DK NXboot and protected KNSh firmware.\n\n'
   printf 'Run from anywhere inside the Feather checkout. Outputs are written to:\n\n'
   printf '  build/stm32h7s78-dk-nxboot.bin\n'
   printf '      Raw NuttX NXboot image. Program at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32h7s78-dk-nsh.bin\n'
-  printf '      Final NSH app image: [NXboot header][NuttX app raw binary].\n'
-  printf '      Program at XSPI2 NOR 0x70000000. The app vector table starts at\n'
+  printf '  build/stm32h7s78-dk-knsh.bin\n'
+  printf '      Final protected KNSh app image: [NXboot header][kernel blob]\n'
+  printf '      [padding to user-space address][user blob].\n'
+  printf '      Program at XSPI2 NOR 0x70000000. The kernel vector table starts at\n'
   printf '      0x70000000 + CONFIG_NXBOOT_HEADER_SIZE, normally 0x70000400.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N          Parallel make jobs (default: 8)\n'
@@ -51,12 +52,25 @@ build_dir="../build"
 nximage_tool="../apps/boot/nxboot/tools/nximage.py"
 
 loader_bin="${build_dir}/stm32h7s78-dk-nxboot.bin"
-app_image_bin="${build_dir}/stm32h7s78-dk-nsh.bin"
+app_image_bin="${build_dir}/stm32h7s78-dk-knsh.bin"
 
 jobs="${JOBS:-8}"
 version="0.1.0"
 header_size=""
 identifier=""
+userspace=""
+tmp_files=()
+
+cleanup()
+{
+  local tmp
+
+  for tmp in "${tmp_files[@]}"; do
+    rm -f "${tmp}"
+  done
+}
+
+trap cleanup EXIT
 
 config_value()
 {
@@ -94,11 +108,8 @@ configure_board()
   make clean
 }
 
-create_nxboot_image()
+load_image_config()
 {
-  local input="$1"
-  local output="$2"
-
   if [[ -z "${header_size}" ]]; then
     header_size="$(config_value CONFIG_NXBOOT_HEADER_SIZE)"
     header_size="${header_size:-0x400}"
@@ -108,6 +119,93 @@ create_nxboot_image()
     identifier="$(config_value CONFIG_NXBOOT_PLATFORM_IDENTIFIER)"
     identifier="${identifier:-0x48735378}"
   fi
+
+  if [[ -z "${userspace}" ]]; then
+    userspace="$(config_value CONFIG_NUTTX_USERSPACE)"
+    userspace="${userspace:-0x70080400}"
+  fi
+}
+
+create_protected_payload()
+{
+  local kernel_input="$1"
+  local user_input="$2"
+  local output="$3"
+
+  load_image_config
+
+  if [[ ! -f "${kernel_input}" ]]; then
+    echo "ERROR: kernel binary not found: ${kernel_input}" >&2
+    exit 1
+  fi
+
+  if [[ ! -f "${user_input}" ]]; then
+    echo "ERROR: user binary not found: ${user_input}" >&2
+    exit 1
+  fi
+
+  python3 - "${kernel_input}" "${user_input}" "${output}" \
+    "${header_size}" "${userspace}" <<'PY'
+import io
+import os
+import sys
+
+kernel_path, user_path, output_path, header_size, userspace = sys.argv[1:6]
+slot_base = 0x70000000
+header_size = int(header_size, 0)
+userspace = int(userspace, 0)
+kernel_base = slot_base + header_size
+kernel_window = userspace - kernel_base
+
+if kernel_window <= 0:
+    raise SystemExit("ERROR: CONFIG_NUTTX_USERSPACE must be above the "
+                     "kernel vector address")
+
+kernel_size = os.stat(kernel_path).st_size
+if kernel_size > kernel_window:
+    raise SystemExit(
+        f"ERROR: kernel binary is {kernel_size} bytes but the protected "
+        f"kernel window is only {kernel_window} bytes"
+    )
+
+with open(output_path, "wb") as output:
+    with open(kernel_path, "rb") as kernel:
+        while True:
+            data = kernel.read(io.DEFAULT_BUFFER_SIZE)
+            if not data:
+                break
+            output.write(data)
+
+    output.write(b"\xff" * (kernel_window - kernel_size))
+
+    with open(user_path, "rb") as user:
+        while True:
+            data = user.read(io.DEFAULT_BUFFER_SIZE)
+            if not data:
+                break
+            output.write(data)
+PY
+}
+
+kernel_window_size()
+{
+  load_image_config
+
+  python3 - "${header_size}" "${userspace}" <<'PY'
+import sys
+
+header_size, userspace = sys.argv[1:3]
+slot_base = 0x70000000
+print(int(userspace, 0) - (slot_base + int(header_size, 0)))
+PY
+}
+
+create_nxboot_image()
+{
+  local input="$1"
+  local output="$2"
+
+  load_image_config
 
   if [[ ! -f "${nximage_tool}" ]]; then
     echo "ERROR: NXboot image tool not found: ${nximage_tool}" >&2
@@ -226,11 +324,14 @@ configure_board stm32h7s78-dk:nxboot
 make "-j${jobs}"
 cp nuttx.bin "${loader_bin}"
 
-printf '\n==> Building STM32H7S78-DK NSH NXboot app\n'
+printf '\n==> Building STM32H7S78-DK protected KNSh NXboot app\n'
 distclean_tree
-configure_board stm32h7s78-dk:nsh
+configure_board stm32h7s78-dk:knsh
 make "-j${jobs}"
-create_nxboot_image nuttx.bin "${app_image_bin}"
+app_raw_bin="$(mktemp "${TMPDIR:-/tmp}/stm32h7s78-dk-knsh-raw.XXXXXX")"
+tmp_files+=("${app_raw_bin}")
+create_protected_payload nuttx.bin nuttx_user.bin "${app_raw_bin}"
+create_nxboot_image "${app_raw_bin}" "${app_image_bin}"
 
 printf '\n==> Firmware outputs\n'
 printf '  NXboot raw image:\n'
@@ -239,9 +340,20 @@ printf '    size:       %s bytes\n' "$(file_size "${loader_bin}")"
 printf '    structure:  raw NuttX NXboot binary\n'
 printf '    program at: internal Flash 0x08000000\n\n'
 
-printf '  NSH NXboot app image:\n'
+printf '  KNSh protected app payload:\n'
+printf '    size:       %s bytes\n' "$(file_size "${app_raw_bin}")"
+printf '    structure:  [kernel blob][0xff padding to %s bytes][user blob]\n' \
+  "$(kernel_window_size)"
+printf '    storage:    temporary build input, not kept in build/\n'
+printf '    kernel:     0x70000000 + %s, normally 0x70000400\n' \
+  "${header_size}"
+printf '    userspace:  %s\n\n' "${userspace}"
+
+printf '  KNSh NXboot app image:\n'
 printf '    file:       %s\n' "${app_image_bin}"
 printf '    size:       %s bytes\n' "$(file_size "${app_image_bin}")"
-printf '    structure:  [NXboot header %s][NuttX app raw binary]\n' "${header_size}"
+printf '    structure:  [NXboot header %s][protected app payload]\n' \
+  "${header_size}"
 printf '    program at: XSPI2 NOR 0x70000000\n'
-printf '    app vector: 0x70000000 + %s, normally 0x70000400\n\n' "${header_size}"
+printf '    kernel vector: 0x70000000 + %s, normally 0x70000400\n\n' \
+  "${header_size}"

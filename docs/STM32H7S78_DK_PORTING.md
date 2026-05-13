@@ -551,6 +551,77 @@ PSRAM 速度参数也重新对齐 Cube `Template_XIP_Custom`：
   build/stm32h7s78-dk-nsh.bin    = 115508 bytes
 ```
 
+## 2026-05-13 KNSh protected build 补齐
+
+本轮继续补齐 `stm32h7s78-dk:knsh` protected build：
+
+```text
+- 新增 tools/firmware/stm32h7s78-dk/build-knsh.sh。
+- knsh 使用 protected kernel/user 双镜像布局：
+  kernel blob: 0x70000400..0x700803ff，512 KiB 窗口
+  user blob:   0x70080400..，从 struct userspace_s 开始
+- build-knsh.sh 会先构建 nxboot，再构建 knsh。
+- 构建脚本启动时会清理 `build/stm32h7s78-dk-*` 旧产物，避免混入上次
+  nsh/knsh 构建留下的文件。
+- knsh payload 由 nuttx.bin 填充到 512 KiB kernel 窗口后拼接
+  nuttx_user.bin 生成；窗口填充字节为 0xff，匹配外部 NOR erased state。
+- knsh payload 只是 NXboot 打包输入，使用临时文件，不保留到 build/。
+- 最终外部 NOR 镜像仍是 [NXboot header][protected app payload]，烧录到
+  0x70000000；kernel vector table 位于 0x70000400。
+```
+
+KNSh heap 策略当前固定为：
+
+```text
+- CONFIG_STM32H7RS_PROTECTED_USRAM_BASE=0x24060000
+- CONFIG_STM32H7RS_PROTECTED_USRAM_SIZE=0x12000
+- 内部 AXI SRAM 0x24060000..0x24071fff 只保留给 user .data/.bss。
+- up_allocate_kheap() 把 g_idle_topstack..0x2405ffff 作为 kernel heap。
+- CONFIG_STM32H7RS_PSRAM_HEAP_OFFSET=0x0
+- up_allocate_heap() 把完整 XSPI1 PSRAM 0x90000000..0x91ffffff 作为 user heap。
+- PSRAM 初始化失败时 protected KNSh 会 PANIC，避免用户 heap 落在无效外存上。
+- 板级 scripts/Make.defs 在 CONFIG_BUILD_PROTECTED=y 时通过 EXTRA_OBJS
+  提前链接 board/stm32h7s78_heap.o，避免 libkarch.a 的 weak
+  arm_allocateheap.o 被选中后覆盖上述 heap 策略。
+```
+
+KNSh 早期 HardFault 排查：
+
+```text
+- 上板日志显示 panic 发生在 `KNSh user heap ready` 之后、`KNSh kernel heap
+  init enter` 之前；反汇编确认中间只有 `umm_initialize()`。
+- `irq_unexpected_isr: ERROR irq: 3` 对应 ARMv7-M HardFault。此时
+  `irq_initialize()` 尚未运行，所以原本只能落到 unexpected ISR。
+- 已在 `CONFIG_DEBUG_HARDFAULT_ALERT=y` 时提前挂接 `arm_hardfault`，后续若
+  仍 fault，应能打印 CFSR/BFAR 等真实 fault 信息。
+- 对比 STM32/XMC/LPC/MPS protected 板级后，user heap 都会单独建立 MPU
+  user RW region，并要求 heap window 满足 MPU 对齐。H7S78-DK 当前把完整
+  32 MiB PSRAM 用作 user heap，0x90000000/0x02000000 本身满足 2^N 对齐。
+- H7RS protected user text/user data/user heap MPU region 都改为沿用启动阶段
+  XIP NOR/AXI SRAM/PSRAM 的 Normal cacheable 属性，只调整 user 访问权限和
+  XN，避免在 cache 已开启后给同一物理 window 叠加不同 memory attribute。
+- PSRAM self-test 增加最后一个 cache line 覆盖，覆盖 `mm_addregion()` 会写
+  的 heap end guard node 位置 `0x91fffff8/0x91fffffc`。
+```
+
+本地验证：
+
+```text
+- make distclean && ./tools/configure.sh stm32h7s78-dk:knsh && make -j$(nproc) 通过。
+- ./tools/firmware/stm32h7s78-dk/build-knsh.sh -j $(nproc) 通过。
+- System.map 确认 up_allocate_heap/up_allocate_kheap 为 T 符号，来源
+  board/stm32h7s78_heap.o。
+- build/stm32h7s78-dk-nxboot.bin   = 56544 bytes
+- build/stm32h7s78-dk-knsh.bin     = 583320 bytes
+- stm32h7s78-dk-knsh.bin header:
+  magic NXOS, header size 0x400, payload size 582296,
+  identifier 0x48735378, CRC verified.
+- image layout spot-check:
+  app vector at file offset 0x400,
+  userspace struct at file offset 0x80400,
+  kernel-to-user padding is 0xff.
+```
+
 ## 当前限制
 
 ```text
@@ -571,13 +642,15 @@ PSRAM 速度参数也重新对齐 Cube `Template_XIP_Custom`：
 
 外部 XSPI2 NOR 0x70000000:
   /home/uan-wsl2/Feather/build/stm32h7s78-dk-nsh.bin
+  或 protected KNSh:
+  /home/uan-wsl2/Feather/build/stm32h7s78-dk-knsh.bin
 ```
 
 ## 后续任务
 
 ```text
-1. 重新烧录 nxboot/nsh，验证 2026-05-12 MPU/cache 配置后的 boot -> app 链路。
-2. 上板验证 UART4 NSH 输入输出和 PSRAM heap 的长时间稳定性。
+1. 重新烧录 nxboot/nsh 或 nxboot/knsh，验证 2026-05-12 之后的 boot -> app 链路。
+2. 上板验证 UART4 NSH/KNSh 输入输出和 PSRAM heap 的长时间稳定性。
 3. 补 XSPI DLYB calibration、cache maintenance 和 memory attribute 策略，提升 200 MHz OPI/DTR 稳定性。
 4. 实现 XSPI2 NOR erase/write MTD，用于后续 OTA 更新。
 5. 继续补 LED/button、SDMMC、LCD、Ethernet、USB 等板级外设。
