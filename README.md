@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/feather-rtos-logo.png" alt="Feather RTOS" width="720">
+</p>
+
 # Feather
 
 Feather is the platform super-project for FeatherCore NuttX work.
