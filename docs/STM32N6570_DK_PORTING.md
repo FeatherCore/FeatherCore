@@ -31,13 +31,19 @@ by `apps/boot/nxboot/tools/nximage.py`.
   - USART1 TX `PE5`, RX `PE6`, 115200 8N1.
   - `nsh` registers `/dev/console` and `/dev/ttyS0`.
   - `nxboot` keeps the smaller early/syslog-only path.
-- Added `stm32n6570-dk:nxboot` and `stm32n6570-dk:nsh`.
+- Added `stm32n6570-dk:nxboot`, `stm32n6570-dk:nsh`, and
+  `stm32n6570-dk:knsh`.
 - Added linker scripts:
   - NXboot: RAM payload at `0x34180400`, length `511 KiB`.
   - App: XIP at `0x70100400`, RAM at `0x34000000`.
-- Implemented the Cube first-stage clock profile in pure NuttX register code:
-  - HSI -> PLL1, `M=4/N=75/P1=1/P2=1`.
-  - CPU clock `600 MHz`.
+  - Protected KNSh app: NXboot header at `0x70100000`, kernel vector at
+    `0x70100400`, user blob at `0x70180400`.
+- Implemented the Cube 800 MHz first-stage clock profile in pure NuttX
+  register code:
+  - DK PF4 selects external SMPS overdrive before VOS is raised.
+  - VOS scale 0.
+  - HSI -> PLL1, `M=8/N=100/P1=1/P2=1`.
+  - CPU clock `800 MHz`.
   - SYS/AXI class clock `400 MHz`.
   - HCLK/PCLK class clock `200 MHz`.
 - Added stable post-lowsetup boot logging for the first-stage path:
@@ -49,13 +55,13 @@ by `apps/boot/nxboot/tools/nximage.py`.
 - Added read-only OTP124 HSLV detection:
   - VDDIO3 HSLV controls whether XSPI2 NOR may use the 200 MHz path.
   - VDDIO2 HSLV controls whether XSPI1 PSRAM may use the 200 MHz path.
-  - The port does not burn OTP; missing fuses keep the related XSPI path at
-    50 MHz and print a warning.
+  - The port does not burn OTP; missing fuses are reported and the affected
+    XSPI bus stays on the conservative 50 MHz path.
 - Added XSPI startup/optional clock diagnostics:
   - XSPI1/XSPI2 source clock and XSPIM common setup state.
   - Startup prescaler/effective clock for NOR and PSRAM.
   - Optional memory-mapped prescaler/effective clock, including OTP-based
-    50 MHz fallback warnings when high-speed IO is not enabled.
+    high-speed/fallback diagnostics.
 - Implemented XSPI2 NOR `MX66UW1G45G` boot-read path:
   - GPION AF9 pin setup.
   - 1S startup reset and JEDEC ID read.
@@ -67,7 +73,13 @@ by `apps/boot/nxboot/tools/nximage.py`.
   - GPIOO/GPIOP AF9 pin setup.
   - 8S-8D-8D startup register mode.
   - MR0/MR4/MR8 configuration and readback.
+  - STM32CubeN6-aligned stable settings: MR0 `0x30`, MR4 `0x20`,
+    MR8 `0x40`, linear-burst read command `0x20`, linear-burst write command
+    `0xa0`, FIFO threshold 8 bytes, and refresh enabled.
   - 8S-8D-16D memory-mapped mode at `0x90000000`.
+  - PSRAM startup register access and self-test stay at 50 MHz.
+  - The final memory-mapped target is 200 MHz when VDDIO2 HSLV is available;
+    otherwise PSRAM remains mapped at 50 MHz as a defensive fallback.
   - H7S78-style startup self-test during PSRAM initialization.
 - Added board-level NXboot slot MTD registration skeleton:
   - `/dev/mtd0`
@@ -97,9 +109,16 @@ by `apps/boot/nxboot/tools/nximage.py`.
   - `CONFIG_STM32N6_PSRAM_HEAP=y`
   - default heap region `0x90200000..0x91ffffff`
   - first `2 MiB` left free for future framebuffer or early bring-up use.
+- Added protected KNSh heap split:
+  - user static `.data/.bss` uses the top `128 KiB` of the app SRAM window:
+    `0x341e0000..0x341fffff`
+  - remaining internal SRAM below `0x341e0000` is kernel SRAM and runtime
+    kernel heap
+  - XSPI1 PSRAM `0x90000000..0x91ffffff` is mapped as the user heap
 - Added Feather firmware helper scripts:
   - `tools/firmware/stm32n6570-dk/pack-stm32-fsbl-nxboot.sh`
   - `tools/firmware/stm32n6570-dk/pack-nxboot-header-app.sh`
+  - `tools/firmware/stm32n6570-dk/build-knsh.sh`
 - Aligned the board structure with `stm32h7s78-dk` where applicable:
   - `stm32n6570-dk:nxboot` / `stm32n6570-dk:nsh` config naming.
   - board-level CMake source and linker-script selection.
@@ -121,14 +140,15 @@ by `apps/boot/nxboot/tools/nximage.py`.
 0x70000000  ST BootROM header + signed NXboot payload
 0x70100000  NXboot primary app image header
 0x70100400  app vector table / app text
+0x70180400  protected KNSh user blob base
 0x72100000  reserved secondary app slot
 0x74100000  reserved tertiary app slot
 0x76100000  tail reserve for future data/scratch use, not used as a default
             filesystem partition in this checkpoint
 
 0x90000000  XSPI1 PSRAM base
-0x90000000  first 2 MiB reserved for future framebuffer/diagnostics
-0x90200000  app-side PSRAM heap base, default size 30 MiB
+0x90000000  protected KNSh user heap base, size 32 MiB
+0x90200000  flat NSH app-side PSRAM heap base, default size 30 MiB
 ```
 
 ## Current Runtime Expectations
@@ -138,7 +158,7 @@ NXboot serial log should include:
 - `N6`
 - `stm32n6: PWR VDDIO2/3 status=... SVMCR3=...`
 - `stm32n6: clock status=... SR=... CFGR1=... CFGR2=...`
-- `stm32n6: clock CPU=600000000 SYS=400000000 HCLK=200000000 PCLK1=200000000 PCLK2=200000000`
+- `stm32n6: clock CPU=800000000 SYS=400000000 HCLK=200000000 PCLK1=200000000 PCLK2=200000000`
 - `stm32n6: HSLV OTP124=... VDDIO2=... VDDIO3=...`
 - `stm32n6: XSPI1 source=...Hz XSPI2 source=...Hz XSPIM_CR=...`
 - `XSPI2 NOR startup prescaler=... effective=...Hz`
@@ -146,11 +166,11 @@ NXboot serial log should include:
 - `XSPI2 NOR OPI/DTR config readback 02`
 - `XSPI2 NOR optional prescaler=... effective=...Hz`
 - `XSPI2 NOR mapped 0x70000000 ota0[0]=...`
-- `XSPI1 PSRAM startup prescaler=... effective=...Hz`
-- `XSPI1 PSRAM MR00000000 ... readback ...`
-- `XSPI1 PSRAM MR00000004 ... readback ...`
-- `XSPI1 PSRAM MR00000008 ... readback ...`
-- `XSPI1 PSRAM optional prescaler=... effective=...Hz`
+- `XSPI1 PSRAM startup prescaler=3 effective=50000000Hz refresh=96`
+- `XSPI1 PSRAM MR00000000 initial 08 write 30 readback 30`
+- `XSPI1 PSRAM MR00000004 initial 40 write 20 readback 20`
+- `XSPI1 PSRAM MR00000008 initial 05 write 45 readback 45`
+- `XSPI1 PSRAM optional prescaler=0 effective=200000000Hz refresh=396`
 - `XSPI1 PSRAM self-test passed`
 - `XSPI1 PSRAM mapped at 0x90000000`
 - `stm32n6: registered /dev/mtd0`
@@ -162,9 +182,11 @@ If no app image has been burned at `0x70100000`, NXboot should still end with
 `Could not find bootable image`.  That is expected until a valid NXboot app
 image is present.
 
-When the app boots with `CONFIG_STM32N6_PSRAM_HEAP=y`, early heap setup calls
-`stm32n6570_xspi1_psram_initialize()` idempotently and then adds the PSRAM heap
-region starting at `0x90200000`.
+When the flat NSH app boots with `CONFIG_STM32N6_PSRAM_HEAP=y`, early heap
+setup calls `stm32n6570_xspi1_psram_initialize()` idempotently and then adds
+the PSRAM heap region starting at `0x90200000`.  Protected KNSh uses the same
+PSRAM initialization path but gives the whole PSRAM window to the user heap
+and keeps the remaining internal SRAM for the kernel heap.
 
 App-side device expectations after a valid jump:
 
@@ -185,15 +207,50 @@ External NOR is not mounted as a filesystem by default.  `/dev/mtd0` and
 `/dev/ota0..2` are raw image-storage interfaces for XIP and NXboot updates.
 Startup never erases, formats, or writes the external NOR automatically.
 
+## Hardware Validation Checkpoint
+
+On 2026-05-14, the protected KNSh path reached the NSH prompt on
+STM32N6570-DK hardware with the 50 MHz PSRAM mapping:
+
+```text
+XSPI2 NOR JEDEC ID c2 81 3b
+XSPI2 NOR OPI/DTR config readback 02
+XSPI2 NOR mapped 0x70000000 ota0[0]=0x534f584e
+XSPI1 PSRAM MR00000000 initial 08 write 30 readback 30
+XSPI1 PSRAM MR00000004 initial 40 write 20 readback 20
+XSPI1 PSRAM MR00000008 initial 05 write 45 readback 45
+XSPI1 PSRAM optional prescaler=3 effective=50000000Hz refresh=96
+XSPI1 PSRAM self-test passed
+Found bootable image, boot from primary.
+Boot vector msp=0x34003400 reset=0x70101861 vtor=0x70100400
+stm32n6: user SRAM bootstrap heap base=0x341e0290 size=0x00002000 psram=0x90000000 psram-size=0x02000000
+stm32n6: kernel SRAM heap base=0x34003400 size=0x001dcc00 end=0x341e0000
+stm32n6: added PSRAM heap base=0x90000000 size=0x02000000
+NuttShell (NSH)
+nsh>
+```
+
+This confirms the BootROM FSBL wrapper, NuttX/NXboot handoff, XSPI2 XIP NOR,
+protected kernel/user image layout, USART1 console, and PSRAM-backed user heap
+all worked at the conservative PSRAM clock.
+
+The current high-speed target is CPU 800 MHz with PSRAM memory-mapped at
+200 MHz:
+
+```text
+stm32n6: clock CPU=800000000 SYS=400000000 HCLK=200000000 PCLK1=200000000 PCLK2=200000000
+XSPI1 PSRAM startup prescaler=3 effective=50000000Hz refresh=96
+XSPI1 PSRAM optional prescaler=0 effective=200000000Hz refresh=396
+```
+
 ## Important Gaps
 
-The current code is the first buildable skeleton, not a hardware-validated
-port.
-
-- The RCC/XSPI sequences now build, but still need board validation on real
-  STM32N6570-DK hardware.
-- USART1 now has a minimal interrupt-driven serial lower-half for app NSH,
-  but it has not been hardware validated yet.
+- Basic RCC/USART1/XSPI2/XSPI1 protected KNSh boot was hardware validated at
+  the 50 MHz PSRAM setting.
+- The CPU 800 MHz / PSRAM 200 MHz profile still needs sustained heap and stack
+  stress testing on hardware.
+- Temporary heap/scheduler bring-up logs should be removed after the protected
+  heap split is stable.
 - NOR write/erase is implemented for explicit MTD use only.  Startup code
   still never erases, formats, or writes NOR automatically.
 - LCD/touch/SD/audio/camera/USBPD are planned but not implemented in this
@@ -207,6 +264,10 @@ cd /home/uan-wsl2/Feather
 ./tools/firmware/stm32n6570-dk/build-nsh.sh \
   --signing-tool /path/to/STM32_SigningTool_CLI \
   -j 8
+
+./tools/firmware/stm32n6570-dk/build-knsh.sh \
+  --signing-tool /path/to/STM32_SigningTool_CLI \
+  -j 8
 ```
 
 The build helper produces both burnable images:
@@ -217,6 +278,9 @@ build/stm32n6570-dk-nxboot.bin
 
 build/stm32n6570-dk-nsh.bin
   [NXboot header][NuttX NSH app raw binary], burn at 0x70100000
+
+build/stm32n6570-dk-knsh.bin
+  [NXboot header][kernel blob][0xff padding][user blob], burn at 0x70100000
 ```
 
 `--signing-tool` can be omitted when the local STM32CubeProgrammer CLI cache is
@@ -233,20 +297,33 @@ Static build verification:
   - Internal SRAM data/BSS links at `0x34000000`.
   - `.ramfunc` section links at `0x34000000` and is loaded from NOR, so NOR
     write/erase routines can run while XSPI2 memory-mapped mode is disabled.
-  - Latest observed external NOR usage: `92328 B`.
-  - Latest observed internal SRAM usage: `13672 B`.
+  - Latest observed external NOR usage: `91692 B`.
+  - Latest observed internal SRAM usage: `12712 B`.
   - PSRAM linker region is present at `0x90000000`; runtime heap extension is
     controlled by `CONFIG_STM32N6_PSRAM_HEAP`.
+- `stm32n6570-dk:knsh` builds successfully as of 2026-05-14.
+  - Kernel links at `0x70100400` and uses a `512 KiB` slot window before
+    user space.
+  - User blob links at `0x70180400`.
+  - Latest observed kernel XIP usage: `94204 B`.
+  - Latest observed kernel SRAM usage: `12288 B`.
+  - Latest observed user image size: `47208 B`.
+- `tools/firmware/stm32n6570-dk/build-knsh.sh -j 8` builds both burnable
+  images successfully as of 2026-05-14.
+  - `build/stm32n6570-dk-nxboot.bin`: `62272 B`.
+  - `build/stm32n6570-dk-knsh.bin`: `572520 B`.
 - `git diff --check` passes.
 - New STM32N6 code does not directly call Cube `HAL_`, `LL_`, or `BSP_`
   functions.
 
 ## Packaging
 
-`build-nsh.sh` is the preferred entrypoint.  It first builds
-`stm32n6570-dk:nxboot`, wraps that payload with the ST trusted FSBL
-header, then builds `stm32n6570-dk:nsh` and wraps the app with the
-NXboot header.
+`build-nsh.sh` is the flat NSH entrypoint.  `build-knsh.sh` is the protected
+KNSh entrypoint.  Both first build `stm32n6570-dk:nxboot` and wrap that
+payload with the ST trusted FSBL header.  `build-nsh.sh` then wraps the flat
+NSH app with the NXboot header; `build-knsh.sh` combines the kernel and user
+blobs into one protected payload, then wraps that payload with the NXboot
+header.
 
 NXboot payload:
 
@@ -289,10 +366,13 @@ Additional script checks in this checkpoint:
 
 ## Next Bring-up Steps
 
-1. Validate the RCC/USART1/XSPI2/XSPI1 path on hardware.
-2. Burn a valid NXboot app at `0x70100000` and confirm `BOARDIOC_BOOT_IMAGE`
-   jumps to the app vector at `0x70100400`.
-3. Hardware-validate USART1 console input, XSPI1 PSRAM startup self-test logs,
-   and `/dev/mtd0` plus `/dev/ota0..2` registration.
-4. Add SD/LCD/touch/audio/camera/USBPD in
+1. Reflash both NXboot and the KNSh app so the 800 MHz clock profile is set
+   before the XIP app starts.
+2. Run basic NSH commands and user-heap stress tests with PSRAM at 200 MHz.
+3. Keep MR/linear-burst settings aligned with STM32CubeN6 while checking for
+   stack/context corruption.
+4. Remove temporary heap and scheduler debug prints once the protected KNSh
+   boot is repeatable.
+5. Hardware-validate explicit NOR erase/write through the MTD path.
+6. Add SD/LCD/touch/audio/camera/USBPD in
    the existing SoC/board layering.
