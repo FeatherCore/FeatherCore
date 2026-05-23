@@ -35,6 +35,8 @@ usage()
   printf '      Final NSH app image: [NXboot header][NuttX app raw binary].\n'
   printf '      Program at XSPI2 NOR 0x70100000. The app vector table starts at\n'
   printf '      0x70100000 + CONFIG_NXBOOT_HEADER_SIZE, normally 0x70100400.\n\n'
+  printf '  build/stm32n6570-dk-nsh-full.bin\n'
+  printf '      Combined XSPI2 NOR image. Program at 0x70000000.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N              Parallel make jobs (default: 8)\n'
   printf '  -v, --version VERSION     App semantic version (default: 0.1.0)\n'
@@ -54,9 +56,11 @@ cd "${feather_root}/nuttx"
 build_dir="../build"
 pack_stm32_fsbl_nxboot_tool="../tools/firmware/stm32n6570-dk/pack-stm32-fsbl-nxboot.sh"
 pack_nxboot_header_app_tool="../tools/firmware/stm32n6570-dk/pack-nxboot-header-app.sh"
+pack_full_flash_image_tool="../tools/firmware/stm32n6570-dk/pack-full-flash-image.sh"
 
 nxboot_image_bin="${build_dir}/stm32n6570-dk-nxboot.bin"
 app_image_bin="${build_dir}/stm32n6570-dk-nsh.bin"
+full_image_bin="${build_dir}/stm32n6570-dk-nsh-full.bin"
 
 jobs="${JOBS:-8}"
 version="0.1.0"
@@ -193,6 +197,7 @@ done
 resolve_signing_tool
 require_helper "${pack_stm32_fsbl_nxboot_tool}"
 require_helper "${pack_nxboot_header_app_tool}"
+require_helper "${pack_full_flash_image_tool}"
 
 printf '==> Cleaning STM32N6570-DK build outputs\n'
 clean_build_dir
@@ -210,6 +215,8 @@ configure_board stm32n6570-dk:nsh
 make "-j${jobs}"
 app_payload_size="$(file_size nuttx.bin)"
 "${pack_nxboot_header_app_tool}" nuttx.bin "${app_image_bin}" "${version}"
+"${pack_full_flash_image_tool}" "${nxboot_image_bin}" "${app_image_bin}" \
+  "${full_image_bin}"
 
 header_size="$(config_value CONFIG_NXBOOT_HEADER_SIZE)"
 header_size="${header_size:-0x400}"
@@ -232,3 +239,9 @@ printf '    structure:  [NXboot header %s][NuttX app raw binary]\n' "${header_si
 printf '    identifier: %s\n' "${identifier}"
 printf '    program at: XSPI2 NOR 0x70100000\n'
 printf '    app vector: 0x70100000 + %s, normally 0x70100400\n\n' "${header_size}"
+
+printf '  Full XSPI2 NOR image:\n'
+printf '    file:       %s\n' "${full_image_bin}"
+printf '    size:       %s bytes\n' "$(file_size "${full_image_bin}")"
+printf '    structure:  [NXboot at +0x0][0xff padding][app at +0x100000]\n'
+printf '    program at: XSPI2 NOR 0x70000000\n\n'

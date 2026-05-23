@@ -273,4 +273,4 @@ if [[ -f "${image_prefix}-user.elf" ]]; then
   printf '    user elf:   %s\n' "${image_prefix}-user.elf"
 fi
 printf '    kernel heap: internal SRAM 0x20000000..0x20270000 after kernel bss/idle stack\n'
-printf '    user heap:   HSPI1 PSRAM after user bss, within 0xa0000000..0xa4000000\n\n'
+printf '    user heap:   HSPI1 PSRAM after user bss, within 0xa0200000..0xa4000000\n\n'
