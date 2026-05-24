@@ -16,10 +16,6 @@ usage()
   printf '  build/stm32u5x9j-dk-knsh-lvgl.bin\n'
   printf '      Final protected KNSh LVGL image: [kernel blob][padding to user-space]\n'
   printf '      [user blob]. Program at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32u5x9j-dk-knsh-lvgl-kernel.bin\n'
-  printf '      Kernel-only raw binary, starting at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32u5x9j-dk-knsh-lvgl-user.bin\n'
-  printf '      User-space raw binary, starting at CONFIG_NUTTX_USERSPACE.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N             Parallel make jobs (default: 8)\n'
   printf '      --lvgl-zip PATH      Use a local LVGL vX.Y.Z.zip archive\n'
@@ -156,6 +152,26 @@ set_config_string()
   fi
 }
 
+lcd_format_name()
+{
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_RGB565=y" .config; then
+    printf 'RGB565'
+  else
+    printf 'XRGB8888'
+  fi
+}
+
+lcd_fb_map_name()
+{
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM=y" .config; then
+    printf 'direct PSRAM'
+  elif grep -q "^CONFIG_STM32U5X9J_DK_LCD_FB_SRAM=y" .config; then
+    printf 'GFXMMU internal SRAM'
+  else
+    printf 'unknown framebuffer backing'
+  fi
+}
+
 enable_lvgl_config()
 {
   printf '==> Enabling STM32U5x9J-DK protected LVGL framebuffer options\n'
@@ -170,16 +186,81 @@ enable_lvgl_config()
   enable_config CONFIG_I2C_DRIVER
   enable_config CONFIG_STM32U5X9J_DK_I2C_BUSES
   enable_config CONFIG_STM32U5X9J_DK_HSPI_RAM
-  disable_config CONFIG_STM32U5X9J_DK_HSPI_HEAP
+  enable_config CONFIG_STM32U5X9J_DK_HSPI_HEAP
   enable_config CONFIG_STM32U5X9J_DK_LCD
   enable_config CONFIG_STM32U5X9J_DK_TOUCH
+  enable_config CONFIG_STM32U5_LTDC_FB_DOUBLE_BUFFER
+  enable_config CONFIG_STM32U5X9J_DK_LCD_RGB565
+  disable_config CONFIG_STM32U5X9J_DK_LCD_XRGB8888
+  enable_config CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM
+  disable_config CONFIG_STM32U5X9J_DK_LCD_FB_SRAM
+  enable_config CONFIG_STM32U5X9J_DK_LCD_COLORBAR
+  disable_config CONFIG_STM32U5X9J_DK_LCD_PATTERN
+
+  # Keep the user heap cached.  With KNSh most LVGL object/state memory lives
+  # in HSPI PSRAM; disabling DCACHE1 makes refresh-time CPU traffic contend
+  # directly with LTDC scanout and can starve the video fetch path.
+  disable_config CONFIG_DEBUG_NOOPT
+  disable_config CONFIG_DEBUG_CUSTOMOPT
+  enable_config CONFIG_DEBUG_FULLOPT
+  enable_config CONFIG_ARMV8M_MEMCPY
+  enable_config CONFIG_ARMV8M_MEMSET
+  enable_config CONFIG_ARMV8M_LAZYFPU
+  enable_config CONFIG_ARMV8M_BASEPRI_ISB
+  enable_config CONFIG_ARMV8M_SYSCALL_RETURN_CURRENT_FRAME
+  enable_config CONFIG_ARMV8M_SYSCALL_RETURN_USER_BASEPRI0
+  enable_config CONFIG_ARMV8M_SYSCALL_DISPATCH_BASEPRI0
+  enable_config CONFIG_ARMV8M_SYSCALL_KERNEL_STACK
+  enable_config CONFIG_ARMV8M_SYSCALL_KERNEL_STACK_PSP
+  set_config_int CONFIG_ARMV8M_SYSCALL_KERNEL_STACKSIZE 8192
+  enable_config CONFIG_STM32U5_ICACHE
+  enable_config CONFIG_STM32U5_ICACHE_DIRECT
+  enable_config CONFIG_STM32U5_DCACHE1
+  enable_config CONFIG_STM32U5_PSRAM_MPU_SHARE_NONE
+  disable_config CONFIG_STM32U5_PSRAM_MPU_SHARE_OUTER
+  enable_config CONFIG_STM32U5_PSRAM_MPU_WRITE_BACK
+  disable_config CONFIG_STM32U5_PSRAM_MPU_WRITE_THROUGH
+  disable_config CONFIG_STM32U5_PSRAM_MPU_NONCACHEABLE
+  enable_config CONFIG_STM32U5_PSRAM_MPU_NO_WRITE_ALLOCATE
+  set_config_int CONFIG_MM_REGIONS 2
+  set_config_int CONFIG_MM_KERNEL_HEAPSIZE 32768
+  set_config_int CONFIG_RAM_SIZE 2424832
+  set_config_int CONFIG_STM32U5X9J_PROTECTED_USRAM_BASE 0x20250000
+  set_config_int CONFIG_STM32U5X9J_PROTECTED_USRAM_SIZE 0x20000
+  set_config_int CONFIG_STM32U5X9J_PROTECTED_UHEAP_SIZE 0x2000
+
   enable_config CONFIG_GRAPHICS_LVGL
   enable_config CONFIG_EXAMPLES_LVGLDEMO
   enable_config CONFIG_LV_USE_NUTTX
   enable_config CONFIG_LV_USE_NUTTX_TOUCHSCREEN
+  disable_config CONFIG_LV_USE_BUILTIN_MALLOC
+  enable_config CONFIG_LV_USE_CLIB_MALLOC
+  disable_config CONFIG_LV_USE_BUILTIN_STRING
+  enable_config CONFIG_LV_USE_CLIB_STRING
+  disable_config CONFIG_LV_USE_BUILTIN_SPRINTF
+  enable_config CONFIG_LV_USE_CLIB_SPRINTF
+  enable_config CONFIG_LV_USE_LOG
+  disable_config CONFIG_LV_LOG_LEVEL_TRACE
+  disable_config CONFIG_LV_LOG_LEVEL_INFO
+  enable_config CONFIG_LV_LOG_LEVEL_WARN
+  disable_config CONFIG_LV_LOG_LEVEL_ERROR
+  disable_config CONFIG_LV_LOG_LEVEL_USER
+  disable_config CONFIG_LV_LOG_LEVEL_NONE
+  enable_config CONFIG_LV_USE_SYSMON
+  enable_config CONFIG_LV_USE_PERF_MONITOR
+  disable_config CONFIG_LV_USE_PERF_MONITOR_LOG_MODE
+  disable_config CONFIG_LV_BUILD_EXAMPLES
+  enable_config CONFIG_LV_COLOR_DEPTH_16
+  disable_config CONFIG_LV_COLOR_DEPTH_32
+  set_config_int CONFIG_LV_COLOR_DEPTH 16
+  enable_config CONFIG_LV_FONT_MONTSERRAT_20
+  enable_config CONFIG_LV_FONT_MONTSERRAT_24
+  enable_config CONFIG_LV_USE_DEMO_WIDGETS
+  enable_config CONFIG_LV_USE_DEMO_BENCHMARK
 
   set_config_int CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE 32768
   set_config_string CONFIG_EXAMPLES_LVGLDEMO_INPUT_DEVPATH /dev/input0
+  set_config_int CONFIG_TLS_LOG2_MAXSTACK 15
 
   make olddefconfig
 }
@@ -194,12 +275,42 @@ verify_lvgl_config()
     CONFIG_FB_SYNC \
     CONFIG_INPUT_TOUCHSCREEN \
     CONFIG_STM32U5X9J_DK_HSPI_RAM \
+    CONFIG_STM32U5X9J_DK_HSPI_HEAP \
     CONFIG_STM32U5X9J_DK_LCD \
+    CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM \
     CONFIG_STM32U5X9J_DK_TOUCH \
+    CONFIG_STM32U5_LTDC_FB_DOUBLE_BUFFER \
+    CONFIG_STM32U5_ICACHE \
+    CONFIG_STM32U5_ICACHE_DIRECT \
+    CONFIG_STM32U5_DCACHE1 \
+    CONFIG_STM32U5_PSRAM_MPU_SHARE_NONE \
+    CONFIG_STM32U5_PSRAM_MPU_WRITE_BACK \
+    CONFIG_STM32U5_PSRAM_MPU_NO_WRITE_ALLOCATE \
+    CONFIG_DEBUG_FULLOPT \
+    CONFIG_ARMV8M_MEMCPY \
+    CONFIG_ARMV8M_MEMSET \
+    CONFIG_ARMV8M_LAZYFPU \
+    CONFIG_ARMV8M_BASEPRI_ISB \
+    CONFIG_ARMV8M_SYSCALL_RETURN_CURRENT_FRAME \
+    CONFIG_ARMV8M_SYSCALL_RETURN_USER_BASEPRI0 \
+    CONFIG_ARMV8M_SYSCALL_DISPATCH_BASEPRI0 \
+    CONFIG_ARMV8M_SYSCALL_KERNEL_STACK \
+    CONFIG_ARMV8M_SYSCALL_KERNEL_STACK_PSP \
     CONFIG_GRAPHICS_LVGL \
     CONFIG_EXAMPLES_LVGLDEMO \
     CONFIG_LV_USE_NUTTX \
-    CONFIG_LV_USE_NUTTX_TOUCHSCREEN
+    CONFIG_LV_USE_NUTTX_TOUCHSCREEN \
+    CONFIG_LV_USE_CLIB_MALLOC \
+    CONFIG_LV_USE_CLIB_STRING \
+    CONFIG_LV_USE_CLIB_SPRINTF \
+    CONFIG_LV_USE_LOG \
+    CONFIG_LV_LOG_LEVEL_WARN \
+    CONFIG_LV_USE_SYSMON \
+    CONFIG_LV_USE_PERF_MONITOR \
+    CONFIG_LV_FONT_MONTSERRAT_20 \
+    CONFIG_LV_FONT_MONTSERRAT_24 \
+    CONFIG_LV_USE_DEMO_WIDGETS \
+    CONFIG_LV_USE_DEMO_BENCHMARK
   do
     if ! grep -q "^${name}=y" .config; then
       printf 'ERROR: %s is not enabled for stm32u5x9j-dk:knsh LVGL\n' \
@@ -207,6 +318,67 @@ verify_lvgl_config()
       missing=1
     fi
   done
+
+  if ! grep -q "^CONFIG_ARMV8M_SYSCALL_KERNEL_STACKSIZE=8192" .config; then
+    printf 'ERROR: CONFIG_ARMV8M_SYSCALL_KERNEL_STACKSIZE must be 8192\n' >&2
+    missing=1
+  fi
+
+  if grep -q "^CONFIG_STM32U5_PSRAM_MPU_SHARE_OUTER=y" .config; then
+    printf 'ERROR: KNSh LVGL PSRAM user heap must use non-shareable MPU policy\n' >&2
+    missing=1
+  fi
+
+  if grep -q "^CONFIG_STM32U5_PSRAM_MPU_NONCACHEABLE=y" .config || \
+     grep -q "^CONFIG_STM32U5_PSRAM_MPU_WRITE_THROUGH=y" .config; then
+    printf 'ERROR: KNSh LVGL PSRAM user heap must use write-back MPU policy\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_MM_REGIONS=2" .config; then
+    printf 'ERROR: CONFIG_MM_REGIONS must be 2 for bootstrap SRAM plus PSRAM user heap\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_RAM_SIZE=2424832" .config; then
+    printf 'ERROR: CONFIG_RAM_SIZE must reserve 0x20000000..0x20250000 for kernel SRAM\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_STM32U5X9J_PROTECTED_USRAM_BASE=0x20250000" .config; then
+    printf 'ERROR: CONFIG_STM32U5X9J_PROTECTED_USRAM_BASE must be 0x20250000\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_STM32U5X9J_PROTECTED_USRAM_SIZE=0x20000" .config; then
+    printf 'ERROR: CONFIG_STM32U5X9J_PROTECTED_USRAM_SIZE must be 0x20000\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_STM32U5X9J_PROTECTED_UHEAP_SIZE=0x2000" .config; then
+    printf 'ERROR: CONFIG_STM32U5X9J_PROTECTED_UHEAP_SIZE must be 0x2000\n' >&2
+    missing=1
+  fi
+
+  if ! grep -q "^CONFIG_TLS_LOG2_MAXSTACK=15" .config; then
+    printf 'ERROR: CONFIG_TLS_LOG2_MAXSTACK must allow the 32768 byte LVGL stack\n' >&2
+    missing=1
+  fi
+
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_XRGB8888=y" .config; then
+    if ! grep -q "^CONFIG_LV_COLOR_DEPTH_32=y" .config; then
+      printf 'ERROR: 32-bit framebuffer requires CONFIG_LV_COLOR_DEPTH_32\n' >&2
+      missing=1
+    fi
+  elif grep -q "^CONFIG_STM32U5X9J_DK_LCD_RGB565=y" .config; then
+    if ! grep -q "^CONFIG_LV_COLOR_DEPTH_16=y" .config; then
+      printf 'ERROR: RGB565 framebuffer requires CONFIG_LV_COLOR_DEPTH_16\n' >&2
+      missing=1
+    fi
+  else
+    printf 'ERROR: no STM32U5x9J-DK LCD pixel format is selected\n' >&2
+    missing=1
+  fi
 
   if [[ "${missing}" -ne 0 ]]; then
     exit 1
@@ -528,15 +700,6 @@ fi
 userspace="$(config_value CONFIG_NUTTX_USERSPACE)"
 userspace="${userspace:-0x08080000}"
 
-copy_output nuttx "${image_prefix}-kernel.elf"
-copy_output nuttx.bin "${image_prefix}-kernel.bin"
-copy_output nuttx.hex "${image_prefix}-kernel.hex"
-copy_output nuttx_user.elf "${image_prefix}-user.elf"
-copy_output nuttx_user.bin "${image_prefix}-user.bin"
-copy_output nuttx_user.hex "${image_prefix}-user.hex"
-copy_output System.map "${image_prefix}-kernel.map"
-copy_output User.map "${image_prefix}-user.map"
-
 create_protected_image nuttx.bin nuttx_user.bin "${image_prefix}.bin" \
   "${userspace}"
 validate_vector "${image_prefix}.bin" "${userspace}"
@@ -552,18 +715,11 @@ printf '    structure:  [kernel blob][0xff padding to %d bytes][user blob]\n' \
 printf '    program at: internal Flash %s\n' "${flash_start}"
 printf '    userspace:  %s\n' "${userspace}"
 printf '    nxboot:     not used\n\n'
-
-printf '  Components:\n'
-printf '    kernel bin: %s (%s bytes)\n' "${image_prefix}-kernel.bin" \
-  "$(file_size "${image_prefix}-kernel.bin")"
-printf '    user bin:   %s (%s bytes)\n' "${image_prefix}-user.bin" \
-  "$(file_size "${image_prefix}-user.bin")"
-if [[ -f "${image_prefix}-kernel.elf" ]]; then
-  printf '    kernel elf: %s\n' "${image_prefix}-kernel.elf"
-fi
-if [[ -f "${image_prefix}-user.elf" ]]; then
-  printf '    user elf:   %s\n' "${image_prefix}-user.elf"
-fi
-printf '    kernel heap: internal SRAM 0x20000000..0x20270000 after kernel bss/idle stack\n'
-printf '    user heap:   HSPI1 PSRAM after user bss, within 0xa0200000..0xa4000000\n'
-printf '    display:     /dev/fb0 with LVGL demo and /dev/input0 touchscreen\n\n'
+printf '    kernel payload: %s bytes\n' "$(file_size nuttx.bin)"
+printf '    user payload:   %s bytes\n' "$(file_size nuttx_user.bin)"
+printf '    kernel heap: internal SRAM below protected user SRAM window\n'
+printf '    user heap:   internal SRAM bootstrap %s bytes plus HSPI1 PSRAM secondary heap\n' \
+  "$(config_value CONFIG_STM32U5X9J_PROTECTED_UHEAP_SIZE)"
+printf '    cache:       ICACHE/DCACHE1 enabled, PSRAM user heap cacheable\n'
+printf '    display:     /dev/fb0 %s, %s framebuffer, LVGL demo, /dev/input0 touchscreen\n\n' \
+  "$(lcd_format_name)" "$(lcd_fb_map_name)"

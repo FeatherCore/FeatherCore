@@ -17,9 +17,7 @@ usage()
   printf 'options and rebuilds a separately named image.\n\n'
   printf 'Outputs are written to:\n\n'
   printf '  build/stm32u5x9j-dk-gpu2d-debug.bin\n'
-  printf '  build/stm32u5x9j-dk-gpu2d-debug.hex\n'
-  printf '  build/stm32u5x9j-dk-gpu2d-debug.elf\n'
-  printf '  build/stm32u5x9j-dk-gpu2d-debug.map\n\n'
+  printf '      Raw NuttX NSH LVGL binary. Program at internal Flash 0x08000000.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N             Parallel make jobs (default: 8)\n'
   printf '      --lvgl-zip PATH      Use a local LVGL vX.Y.Z.zip archive\n'
@@ -270,10 +268,7 @@ if [[ ! -f nuttx.bin ]]; then
   exit 1
 fi
 
-copy_output nuttx "${image_prefix}.elf"
 copy_output nuttx.bin "${image_prefix}.bin"
-copy_output nuttx.hex "${image_prefix}.hex"
-copy_output nuttx.map "${image_prefix}.map"
 
 validate_vector "${image_prefix}.bin"
 
@@ -281,15 +276,6 @@ printf '\n==> Firmware outputs\n'
 printf '  GPU2D debug NSH LVGL internal-Flash image:\n'
 printf '    bin:        %s\n' "${image_prefix}.bin"
 printf '    bin size:   %s bytes\n' "$(file_size "${image_prefix}.bin")"
-if [[ -f "${image_prefix}.hex" ]]; then
-  printf '    hex:        %s\n' "${image_prefix}.hex"
-fi
-if [[ -f "${image_prefix}.elf" ]]; then
-  printf '    elf:        %s\n' "${image_prefix}.elf"
-fi
-if [[ -f "${image_prefix}.map" ]]; then
-  printf '    map:        %s\n' "${image_prefix}.map"
-fi
 printf '    program at: internal Flash 0x08000000\n'
 printf '    config:     GPU2D/GFXMMU + LCD/touch/LVGL + debug symbols/assertions\n'
 printf '    note:       debug build uses CONFIG_DEBUG_NOOPT and is larger/slower\n\n'

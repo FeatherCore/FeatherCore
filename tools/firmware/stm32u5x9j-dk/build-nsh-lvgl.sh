@@ -15,10 +15,6 @@ usage()
   printf 'Run from anywhere inside the Feather checkout. Outputs are written to:\n\n'
   printf '  build/stm32u5x9j-dk-nsh-lvgl.bin\n'
   printf '      Raw NuttX NSH LVGL binary. Program at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32u5x9j-dk-nsh-lvgl.hex\n'
-  printf '      Intel HEX image for tools that prefer address-bearing input.\n\n'
-  printf '  build/stm32u5x9j-dk-nsh-lvgl.elf\n'
-  printf '      ELF image with symbols.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N             Parallel make jobs (default: 8)\n'
   printf '      --lvgl-zip PATH      Use a local LVGL vX.Y.Z.zip archive\n'
@@ -105,6 +101,17 @@ enable_config()
   fi
 }
 
+disable_config()
+{
+  local name="$1"
+
+  if grep -q "^${name}=" .config; then
+    sed -i "s/^${name}=.*/# ${name} is not set/" .config
+  elif ! grep -q "^# ${name} is not set" .config; then
+    printf '# %s is not set\n' "${name}" >> .config
+  fi
+}
+
 set_config_int()
 {
   local name="$1"
@@ -133,6 +140,26 @@ set_config_string()
   fi
 }
 
+lcd_format_name()
+{
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_RGB565=y" .config; then
+    printf 'RGB565'
+  else
+    printf 'XRGB8888'
+  fi
+}
+
+lcd_fb_map_name()
+{
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM=y" .config; then
+    printf 'direct PSRAM'
+  elif grep -q "^CONFIG_STM32U5X9J_DK_LCD_FB_SRAM=y" .config; then
+    printf 'GFXMMU internal SRAM'
+  else
+    printf 'unknown framebuffer backing'
+  fi
+}
+
 enable_lvgl_config()
 {
   printf '==> Enabling STM32U5x9J-DK LVGL framebuffer options\n'
@@ -150,10 +177,57 @@ enable_lvgl_config()
   enable_config CONFIG_STM32U5X9J_DK_HSPI_HEAP
   enable_config CONFIG_STM32U5X9J_DK_LCD
   enable_config CONFIG_STM32U5X9J_DK_TOUCH
+  enable_config CONFIG_STM32U5_LTDC_FB_DOUBLE_BUFFER
+  enable_config CONFIG_STM32U5X9J_DK_LCD_RGB565
+  disable_config CONFIG_STM32U5X9J_DK_LCD_XRGB8888
+  enable_config CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM
+  disable_config CONFIG_STM32U5X9J_DK_LCD_FB_SRAM
+  enable_config CONFIG_STM32U5X9J_DK_LCD_COLORBAR
+  disable_config CONFIG_STM32U5X9J_DK_LCD_PATTERN
+
+  # LVGL benchmark results are render-bound on the Cortex-M33.  The base NSH
+  # defconfig enables debug symbols, which otherwise selects DEBUG_NOOPT.
+  disable_config CONFIG_DEBUG_NOOPT
+  disable_config CONFIG_DEBUG_CUSTOMOPT
+  enable_config CONFIG_DEBUG_FULLOPT
+  enable_config CONFIG_ARMV8M_MEMCPY
+  enable_config CONFIG_ARMV8M_MEMSET
+
+  # Keep instruction fetches and PSRAM-backed LVGL heap traffic cached in the
+  # flat NSH build too.  Framebuffer ownership is handled by explicit cache
+  # clean before LTDC scanout, not by disabling caches globally.
+  enable_config CONFIG_STM32U5_ICACHE
+  enable_config CONFIG_STM32U5_ICACHE_DIRECT
+  enable_config CONFIG_STM32U5_DCACHE1
+
   enable_config CONFIG_GRAPHICS_LVGL
   enable_config CONFIG_EXAMPLES_LVGLDEMO
   enable_config CONFIG_LV_USE_NUTTX
   enable_config CONFIG_LV_USE_NUTTX_TOUCHSCREEN
+  disable_config CONFIG_LV_USE_BUILTIN_MALLOC
+  enable_config CONFIG_LV_USE_CLIB_MALLOC
+  disable_config CONFIG_LV_USE_BUILTIN_STRING
+  enable_config CONFIG_LV_USE_CLIB_STRING
+  disable_config CONFIG_LV_USE_BUILTIN_SPRINTF
+  enable_config CONFIG_LV_USE_CLIB_SPRINTF
+  enable_config CONFIG_LV_USE_LOG
+  disable_config CONFIG_LV_LOG_LEVEL_TRACE
+  disable_config CONFIG_LV_LOG_LEVEL_INFO
+  enable_config CONFIG_LV_LOG_LEVEL_WARN
+  disable_config CONFIG_LV_LOG_LEVEL_ERROR
+  disable_config CONFIG_LV_LOG_LEVEL_USER
+  disable_config CONFIG_LV_LOG_LEVEL_NONE
+  enable_config CONFIG_LV_USE_SYSMON
+  enable_config CONFIG_LV_USE_PERF_MONITOR
+  disable_config CONFIG_LV_USE_PERF_MONITOR_LOG_MODE
+  disable_config CONFIG_LV_BUILD_EXAMPLES
+  enable_config CONFIG_LV_COLOR_DEPTH_16
+  disable_config CONFIG_LV_COLOR_DEPTH_32
+  set_config_int CONFIG_LV_COLOR_DEPTH 16
+  enable_config CONFIG_LV_FONT_MONTSERRAT_20
+  enable_config CONFIG_LV_FONT_MONTSERRAT_24
+  enable_config CONFIG_LV_USE_DEMO_WIDGETS
+  enable_config CONFIG_LV_USE_DEMO_BENCHMARK
 
   set_config_int CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE 32768
   set_config_string CONFIG_EXAMPLES_LVGLDEMO_INPUT_DEVPATH /dev/input0
@@ -173,11 +247,30 @@ verify_lvgl_config()
     CONFIG_STM32U5X9J_DK_HSPI_RAM \
     CONFIG_STM32U5X9J_DK_HSPI_HEAP \
     CONFIG_STM32U5X9J_DK_LCD \
+    CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM \
     CONFIG_STM32U5X9J_DK_TOUCH \
+    CONFIG_STM32U5_LTDC_FB_DOUBLE_BUFFER \
+    CONFIG_STM32U5_ICACHE \
+    CONFIG_STM32U5_ICACHE_DIRECT \
+    CONFIG_STM32U5_DCACHE1 \
+    CONFIG_DEBUG_FULLOPT \
+    CONFIG_ARMV8M_MEMCPY \
+    CONFIG_ARMV8M_MEMSET \
     CONFIG_GRAPHICS_LVGL \
     CONFIG_EXAMPLES_LVGLDEMO \
     CONFIG_LV_USE_NUTTX \
-    CONFIG_LV_USE_NUTTX_TOUCHSCREEN
+    CONFIG_LV_USE_NUTTX_TOUCHSCREEN \
+    CONFIG_LV_USE_CLIB_MALLOC \
+    CONFIG_LV_USE_CLIB_STRING \
+    CONFIG_LV_USE_CLIB_SPRINTF \
+    CONFIG_LV_USE_LOG \
+    CONFIG_LV_LOG_LEVEL_WARN \
+    CONFIG_LV_USE_SYSMON \
+    CONFIG_LV_USE_PERF_MONITOR \
+    CONFIG_LV_FONT_MONTSERRAT_20 \
+    CONFIG_LV_FONT_MONTSERRAT_24 \
+    CONFIG_LV_USE_DEMO_WIDGETS \
+    CONFIG_LV_USE_DEMO_BENCHMARK
   do
     if ! grep -q "^${name}=y" .config; then
       printf 'ERROR: %s is not enabled for stm32u5x9j-dk:nsh LVGL\n' \
@@ -185,6 +278,21 @@ verify_lvgl_config()
       missing=1
     fi
   done
+
+  if grep -q "^CONFIG_STM32U5X9J_DK_LCD_XRGB8888=y" .config; then
+    if ! grep -q "^CONFIG_LV_COLOR_DEPTH_32=y" .config; then
+      printf 'ERROR: 32-bit framebuffer requires CONFIG_LV_COLOR_DEPTH_32\n' >&2
+      missing=1
+    fi
+  elif grep -q "^CONFIG_STM32U5X9J_DK_LCD_RGB565=y" .config; then
+    if ! grep -q "^CONFIG_LV_COLOR_DEPTH_16=y" .config; then
+      printf 'ERROR: RGB565 framebuffer requires CONFIG_LV_COLOR_DEPTH_16\n' >&2
+      missing=1
+    fi
+  else
+    printf 'ERROR: no STM32U5x9J-DK LCD pixel format is selected\n' >&2
+    missing=1
+  fi
 
   if [[ "${missing}" -ne 0 ]]; then
     exit 1
@@ -448,10 +556,7 @@ if [[ ! -f nuttx.bin ]]; then
   exit 1
 fi
 
-copy_output nuttx "${image_prefix}.elf"
 copy_output nuttx.bin "${image_prefix}.bin"
-copy_output nuttx.hex "${image_prefix}.hex"
-copy_output nuttx.map "${image_prefix}.map"
 
 validate_vector "${image_prefix}.bin"
 
@@ -459,16 +564,9 @@ printf '\n==> Firmware outputs\n'
 printf '  NSH LVGL internal-Flash image:\n'
 printf '    bin:        %s\n' "${image_prefix}.bin"
 printf '    bin size:   %s bytes\n' "$(file_size "${image_prefix}.bin")"
-if [[ -f "${image_prefix}.hex" ]]; then
-  printf '    hex:        %s\n' "${image_prefix}.hex"
-fi
-if [[ -f "${image_prefix}.elf" ]]; then
-  printf '    elf:        %s\n' "${image_prefix}.elf"
-fi
-if [[ -f "${image_prefix}.map" ]]; then
-  printf '    map:        %s\n' "${image_prefix}.map"
-fi
 printf '    structure:  raw NuttX image, no NXboot header\n'
 printf '    program at: internal Flash %s\n' "${flash_start}"
 printf '    flash size: %s\n' "${flash_size}"
-printf '    display:    /dev/fb0 with LVGL demo and /dev/input0 touchscreen\n\n'
+printf '    display:    /dev/fb0 with two %s 480x480 %s framebuffers\n' \
+  "$(lcd_format_name)" "$(lcd_fb_map_name)"
+printf '    input:      /dev/input0 touchscreen\n\n'

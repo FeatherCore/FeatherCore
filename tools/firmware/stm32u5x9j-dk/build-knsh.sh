@@ -31,10 +31,6 @@ usage()
   printf '  build/stm32u5x9j-dk-knsh.bin\n'
   printf '      Final protected KNSh image: [kernel blob][padding to user-space]\n'
   printf '      [user blob]. Program at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32u5x9j-dk-knsh-kernel.bin\n'
-  printf '      Kernel-only raw binary, starting at internal Flash 0x08000000.\n\n'
-  printf '  build/stm32u5x9j-dk-knsh-user.bin\n'
-  printf '      User-space raw binary, starting at CONFIG_NUTTX_USERSPACE.\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N          Parallel make jobs (default: 8)\n'
   printf '  -h, --help            Show this help\n'
@@ -236,15 +232,6 @@ fi
 userspace="$(config_value CONFIG_NUTTX_USERSPACE)"
 userspace="${userspace:-0x08080000}"
 
-copy_output nuttx "${image_prefix}-kernel.elf"
-copy_output nuttx.bin "${image_prefix}-kernel.bin"
-copy_output nuttx.hex "${image_prefix}-kernel.hex"
-copy_output nuttx_user.elf "${image_prefix}-user.elf"
-copy_output nuttx_user.bin "${image_prefix}-user.bin"
-copy_output nuttx_user.hex "${image_prefix}-user.hex"
-copy_output System.map "${image_prefix}-kernel.map"
-copy_output User.map "${image_prefix}-user.map"
-
 create_protected_image nuttx.bin nuttx_user.bin "${image_prefix}.bin" \
   "${userspace}"
 validate_vector "${image_prefix}.bin" "${userspace}"
@@ -260,17 +247,7 @@ printf '    structure:  [kernel blob][0xff padding to %d bytes][user blob]\n' \
 printf '    program at: internal Flash %s\n' "${flash_start}"
 printf '    userspace:  %s\n' "${userspace}"
 printf '    nxboot:     not used\n\n'
-
-printf '  Components:\n'
-printf '    kernel bin: %s (%s bytes)\n' "${image_prefix}-kernel.bin" \
-  "$(file_size "${image_prefix}-kernel.bin")"
-printf '    user bin:   %s (%s bytes)\n' "${image_prefix}-user.bin" \
-  "$(file_size "${image_prefix}-user.bin")"
-if [[ -f "${image_prefix}-kernel.elf" ]]; then
-  printf '    kernel elf: %s\n' "${image_prefix}-kernel.elf"
-fi
-if [[ -f "${image_prefix}-user.elf" ]]; then
-  printf '    user elf:   %s\n' "${image_prefix}-user.elf"
-fi
-printf '    kernel heap: internal SRAM 0x20000000..0x20270000 after kernel bss/idle stack\n'
-printf '    user heap:   HSPI1 PSRAM after user bss, within 0xa0200000..0xa4000000\n\n'
+printf '    kernel payload: %s bytes\n' "$(file_size nuttx.bin)"
+printf '    user payload:   %s bytes\n' "$(file_size nuttx_user.bin)"
+printf '    kernel heap: internal SRAM below protected user SRAM window\n'
+printf '    user heap:   internal SRAM bootstrap + HSPI1 PSRAM after framebuffer reserve\n\n'
