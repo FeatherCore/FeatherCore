@@ -88,58 +88,6 @@ configure_board()
   make clean
 }
 
-enable_config()
-{
-  local name="$1"
-
-  if grep -q "^# ${name} is not set" .config; then
-    sed -i "s/^# ${name} is not set/${name}=y/" .config
-  elif grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/${name}=y/" .config
-  else
-    printf '%s=y\n' "${name}" >> .config
-  fi
-}
-
-disable_config()
-{
-  local name="$1"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/# ${name} is not set/" .config
-  elif ! grep -q "^# ${name} is not set" .config; then
-    printf '# %s is not set\n' "${name}" >> .config
-  fi
-}
-
-set_config_int()
-{
-  local name="$1"
-  local value="$2"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/${name}=${value}/" .config
-  elif grep -q "^# ${name} is not set" .config; then
-    sed -i "s/^# ${name} is not set/${name}=${value}/" .config
-  else
-    printf '%s=%s\n' "${name}" "${value}" >> .config
-  fi
-}
-
-set_config_string()
-{
-  local name="$1"
-  local value="$2"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s|^${name}=.*|${name}=\"${value}\"|" .config
-  elif grep -q "^# ${name} is not set" .config; then
-    sed -i "s|^# ${name} is not set|${name}=\"${value}\"|" .config
-  else
-    printf '%s="%s"\n' "${name}" "${value}" >> .config
-  fi
-}
-
 lcd_format_name()
 {
   if grep -q "^CONFIG_STM32U5X9J_DK_LCD_RGB565=y" .config; then
@@ -158,81 +106,6 @@ lcd_fb_map_name()
   else
     printf 'unknown framebuffer backing'
   fi
-}
-
-enable_lvgl_config()
-{
-  printf '==> Enabling STM32U5x9J-DK LVGL framebuffer options\n'
-
-  enable_config CONFIG_DRIVERS_VIDEO
-  enable_config CONFIG_VIDEO_FB
-  enable_config CONFIG_FB_UPDATE
-  enable_config CONFIG_FB_SYNC
-  enable_config CONFIG_INPUT
-  enable_config CONFIG_INPUT_TOUCHSCREEN
-  enable_config CONFIG_I2C
-  enable_config CONFIG_I2C_DRIVER
-  enable_config CONFIG_STM32U5X9J_DK_I2C_BUSES
-  enable_config CONFIG_STM32U5X9J_DK_HSPI_RAM
-  enable_config CONFIG_STM32U5X9J_DK_HSPI_HEAP
-  enable_config CONFIG_STM32U5X9J_DK_LCD
-  enable_config CONFIG_STM32U5X9J_DK_TOUCH
-  enable_config CONFIG_STM32U5_LTDC_FB_DOUBLE_BUFFER
-  enable_config CONFIG_STM32U5X9J_DK_LCD_RGB565
-  disable_config CONFIG_STM32U5X9J_DK_LCD_XRGB8888
-  enable_config CONFIG_STM32U5X9J_DK_LCD_FB_PSRAM
-  disable_config CONFIG_STM32U5X9J_DK_LCD_FB_SRAM
-  enable_config CONFIG_STM32U5X9J_DK_LCD_COLORBAR
-  disable_config CONFIG_STM32U5X9J_DK_LCD_PATTERN
-
-  # LVGL benchmark results are render-bound on the Cortex-M33.  The base NSH
-  # defconfig enables debug symbols, which otherwise selects DEBUG_NOOPT.
-  disable_config CONFIG_DEBUG_NOOPT
-  disable_config CONFIG_DEBUG_CUSTOMOPT
-  enable_config CONFIG_DEBUG_FULLOPT
-  enable_config CONFIG_ARMV8M_MEMCPY
-  enable_config CONFIG_ARMV8M_MEMSET
-
-  # Keep instruction fetches and PSRAM-backed LVGL heap traffic cached in the
-  # flat NSH build too.  Framebuffer ownership is handled by explicit cache
-  # clean before LTDC scanout, not by disabling caches globally.
-  enable_config CONFIG_STM32U5_ICACHE
-  enable_config CONFIG_STM32U5_ICACHE_DIRECT
-  enable_config CONFIG_STM32U5_DCACHE1
-
-  enable_config CONFIG_GRAPHICS_LVGL
-  enable_config CONFIG_EXAMPLES_LVGLDEMO
-  enable_config CONFIG_LV_USE_NUTTX
-  enable_config CONFIG_LV_USE_NUTTX_TOUCHSCREEN
-  disable_config CONFIG_LV_USE_BUILTIN_MALLOC
-  enable_config CONFIG_LV_USE_CLIB_MALLOC
-  disable_config CONFIG_LV_USE_BUILTIN_STRING
-  enable_config CONFIG_LV_USE_CLIB_STRING
-  disable_config CONFIG_LV_USE_BUILTIN_SPRINTF
-  enable_config CONFIG_LV_USE_CLIB_SPRINTF
-  enable_config CONFIG_LV_USE_LOG
-  disable_config CONFIG_LV_LOG_LEVEL_TRACE
-  disable_config CONFIG_LV_LOG_LEVEL_INFO
-  enable_config CONFIG_LV_LOG_LEVEL_WARN
-  disable_config CONFIG_LV_LOG_LEVEL_ERROR
-  disable_config CONFIG_LV_LOG_LEVEL_USER
-  disable_config CONFIG_LV_LOG_LEVEL_NONE
-  enable_config CONFIG_LV_USE_SYSMON
-  enable_config CONFIG_LV_USE_PERF_MONITOR
-  disable_config CONFIG_LV_USE_PERF_MONITOR_LOG_MODE
-  disable_config CONFIG_LV_BUILD_EXAMPLES
-  enable_config CONFIG_LV_COLOR_DEPTH_16
-  disable_config CONFIG_LV_COLOR_DEPTH_32
-  set_config_int CONFIG_LV_COLOR_DEPTH 16
-  enable_config CONFIG_LV_FONT_MONTSERRAT_20
-  enable_config CONFIG_LV_FONT_MONTSERRAT_24
-  enable_config CONFIG_LV_USE_DEMO_WIDGETS
-  enable_config CONFIG_LV_USE_DEMO_BENCHMARK
-
-  set_config_int CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE 32768
-  set_config_string CONFIG_EXAMPLES_LVGLDEMO_INPUT_DEVPATH /dev/input0
-
-  make olddefconfig
 }
 
 verify_lvgl_config()
@@ -273,7 +146,7 @@ verify_lvgl_config()
     CONFIG_LV_USE_DEMO_BENCHMARK
   do
     if ! grep -q "^${name}=y" .config; then
-      printf 'ERROR: %s is not enabled for stm32u5x9j-dk:nsh LVGL\n' \
+      printf 'ERROR: %s is not enabled for stm32u5x9j-dk:nsh-lvgl\n' \
         "${name}" >&2
       missing=1
     fi
@@ -543,8 +416,7 @@ clean_lvgl_objects
 
 printf '==> Configuring STM32U5x9J-DK NSH LVGL for internal Flash\n'
 distclean_tree
-configure_board stm32u5x9j-dk:nsh
-enable_lvgl_config
+configure_board stm32u5x9j-dk:nsh-lvgl
 verify_lvgl_config
 prepare_lvgl_source
 
