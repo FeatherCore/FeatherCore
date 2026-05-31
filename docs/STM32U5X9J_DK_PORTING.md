@@ -1,12 +1,13 @@
 # STM32U5x9J-DK NuttX Porting Notes
 
-This document tracks the STM32U5x9J-DK port in the Feather super-project:
+This document tracks the STM32U5x9J-DK port in the Feather super-project.
+The current hardware-porting workspace is:
 
 ```text
-/home/uan-wsl2/Feather
+/home/uan/Feather-develop-HW
 ```
 
-Current development branch:
+Original development branch context:
 
 ```text
 Feather: /home/uan-wsl2/Feather       -> main
@@ -700,6 +701,139 @@ PSRAM heap/stack traffic in the protected user path.  The later `FUIF`
 investigation separated the remaining scanout problem and fixed it by bypassing
 GFXMMU for PSRAM framebuffers.
 
+### 2026-05-31 External AMOLED and LVGL Regression Notes
+
+Additional display validation was done in the hardware-porting workspace:
+
+```text
+/home/uan/Feather-develop-HW
+```
+
+Two external 1-lane AMOLED panels are now available as STM32U5x9J-DK
+validation targets in addition to the official HX8379C panel:
+
+```text
+CO5300  1.73 inch, 466x466, RGB565, 1-lane MIPI DSI
+ST7801  2.13 inch, 410x502, RGB565, 1-lane MIPI DSI
+```
+
+New panel drivers and board configs:
+
+```text
+drivers/lcd/co5300.c
+drivers/lcd/st7801.c
+include/nuttx/lcd/co5300.h
+include/nuttx/lcd/st7801.h
+boards/arm/stm32u5/stm32u5x9j-dk/configs/nsh-co5300
+boards/arm/stm32u5/stm32u5x9j-dk/configs/nsh-st7801
+tools/firmware/stm32u5x9j-dk/build-nsh-co5300.sh
+tools/firmware/stm32u5x9j-dk/build-nsh-st7801.sh
+```
+
+Effective external-AMOLED baselines:
+
+```text
+CO5300:
+  resolution: 466x466
+  fb/dsi format: RGB565
+  lanes: 1
+  pclk: 16 MHz
+  lane-byte clock: 50 MHz, current stable 400 Mbps lane baseline
+  hscale: 2
+  DSI PHY swap: clock lane only, phy-swap=01
+  verified: framebuffer colorbar
+
+ST7801:
+  resolution: 410x502
+  fb/dsi format: RGB565
+  lanes: 1
+  pclk: 15 MHz
+  lane-byte clock: 52.5 MHz, current stable 420 Mbps lane baseline
+  hscale: 3.500, represented as hscale_num=7 / hscale_den=2
+  DSI PHY swap: clock lane only, phy-swap=01
+  verified: framebuffer colorbar
+```
+
+Important implementation notes:
+
+```text
+- DCS read/BTA support is kept for panel ID/status checkpoints.
+- Clock-lane P/N swap is required for the current flying-wire/adapter setup.
+- ST7801 must keep fractional horizontal timing scale 3.5; integer hscale=2
+  caused visible artifacts.
+- CO5300 must keep its validated integer hscale=2 path.
+- DSI wrapper pattern-generator diagnostics, solid-fill diagnostics, register
+  dump helpers, and verbose per-packet debug logs have been removed from the
+  formal build paths.
+```
+
+Latest build checks after cleanup and NuttX-style formatting:
+
+```text
+./FeatherCore/tools/firmware/stm32u5x9j-dk/build-nsh-co5300.sh -j8
+  -> FeatherCore/build/stm32u5x9j-dk-nsh-co5300.bin
+  -> 126980 bytes
+
+./FeatherCore/tools/firmware/stm32u5x9j-dk/build-nsh-st7801.sh -j8
+  -> FeatherCore/build/stm32u5x9j-dk-nsh-st7801.bin
+  -> 126988 bytes
+
+./FeatherCore/tools/firmware/stm32u5x9j-dk/build-knsh-lvgl.sh -j8
+  -> FeatherCore/build/stm32u5x9j-dk-knsh-lvgl.bin
+  -> 1148576 bytes
+```
+
+The CO5300 and ST7801 NSH colorbar validation builds compile after cleanup.
+The official HX8379C protected `knsh-lvgl` build also compiles, but the
+runtime LVGL path currently has a regression that must be fixed before treating
+the official LVGL path as healthy.
+
+Observed `knsh-lvgl` runtime issue, 2026-05-31:
+
+```text
+LCD panel=HX8379C fb-map=direct fb-format=RGB565 fb-bpp=16
+dsi-format=RGB888 dsi-bpp=32 dsi-lanes=2 panel-colmod=0x77
+phys-stride=960 layer-stride=960 fb-count=2
+
+/dev/fb0 framebuffer virt=0xa0000000 virt1=0xa0070800
+phys=0xa0000000 size=921600 count=2
+
+lvgldemo opens /dev/fb0 successfully:
+  xres=480 yres=480 nplanes=1
+  plane0 mem=0xa0000000 fblen=460800 stride=960 display=0 bpp=16
+  plane1 mem=0xa0070800 fblen=460800 stride=960 display=1 bpp=16
+
+lvgldemo opens /dev/input0 successfully.
+
+Then every LVGL flush fails:
+  stm32u5: LTDC pan busy pending=1 srcr=00000000 isr=00000000
+  [LVGL] flush_cb: ioctl(FBIOPAN_DISPLAY) failed: 16
+```
+
+Interpretation:
+
+```text
+- Device registration and LVGL fbdev/touch opening are working.
+- The failure is in the dynamic pan-display path, not in framebuffer open.
+- errno 16 is EBUSY from the board/LTDC pan path.
+- The LTDC state shows pending=1 while SRCR is 0 and ISR is 0, so the pending
+  state is not being retired by the current reload/vblank completion logic.
+- Static startup colorbar still completes, so this is a dynamic LVGL
+  page-flip/pan regression to debug separately.
+```
+
+Next debug priority:
+
+```text
+1. Inspect the LTDC pan-display state machine and the condition that leaves
+   pending=1 after the first LVGL flip.
+2. Confirm whether the immediate reload/global vertical blank reload interrupt
+   is expected in the current DSI video path.
+3. Recheck FBIOPAN_DISPLAY and FBIO_WAITFORVSYNC semantics against the NuttX
+   fbdev backend used by LVGL 9.2.2.
+4. Keep CO5300/ST7801 colorbar baselines unchanged while fixing HX8379C/LVGL.
+```
+
 ## Sensor Status
 
 ```text
@@ -734,6 +868,8 @@ The current branch also extends the STM32U5 common layer for this board:
 - OSPI1/OCTOSPIM/HSPI1 memory map and RCC definitions
 - SoC-level SDMMC1 clock/source helper and MMCSD lower-half for 8-bit eMMC
 - DSI/LTDC/GFXMMU/DMA2D base definitions and dedicated SoC source files
+- DSI configurable pixel PLL, PHY lane rate, BTA, lane P/N swap, video mode,
+  and fractional horizontal timing scale for external AMOLED validation
 - DSI IRQ added to STM32U5 IRQ map
 - SRAM5 heap address fix in stm32_allocateheap.c
 ```
@@ -848,12 +984,15 @@ VL53L5CX id=...
    `CONFIG_STM32U5X9J_DK_OSPI_SCRATCH_OFFSET`.
 3. Validate SDMMC1/eMMC 8-bit block reads on hardware and confirm existing
    vfat automount at `/mnt/emmc`.
-4. Keep RGB565 and 32-bit XRGB8888 LCD/LVGL builds in the hardware smoke-test set;
-   the PSRAM-backed path should stay direct-linear, while any future SRAM-backed
-   memory-saving path must revalidate the GFXMMU 192BM virtual stride rule.
+4. Fix the current `knsh-lvgl` runtime regression where LVGL opens `/dev/fb0`
+   and `/dev/input0`, but `FBIOPAN_DISPLAY` repeatedly returns `EBUSY` with
+   `LTDC pan busy pending=1`.
 5. Replace VL53L5CX identity/health node with real ranging after the
    firmware/config table dependency is cleanly handled.
-6. Continue LVGL performance tuning only after framebuffer cache maintenance,
-   direct PSRAM scanout, and PSRAM heap placement remain stable across both LCD
-   formats.
+6. Keep RGB565 and 32-bit XRGB8888 LCD/LVGL builds in the hardware smoke-test set;
+   the PSRAM-backed path should stay direct-linear, while any future SRAM-backed
+   memory-saving path must revalidate the GFXMMU 192BM virtual stride rule.
+7. Continue LVGL performance tuning only after framebuffer cache maintenance,
+   direct PSRAM scanout, PSRAM heap placement, and pan-display completion remain
+   stable across both LCD formats.
 ```
