@@ -1,0 +1,3 @@
+"anonymous@example.com" TTLS
+"ttls_mschap_user@example.com" TTLS
+"ttls_mschap_user@example.com" TTLS-MSCHAP "ttls_mschap_password" [2]

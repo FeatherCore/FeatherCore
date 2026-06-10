@@ -1,0 +1,3 @@
+"anonymous@example.com" TTLS
+"ttls_user@example.com" TTLS
+"ttls_user@example.com" TTLS-PAP "ttls_password" [2]
