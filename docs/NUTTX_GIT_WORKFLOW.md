@@ -1,8 +1,8 @@
 # Feather NuttX Git Workflow
 
 本文档记录 FeatherCore 当前的 NuttX 开发工作流。现在以
-`/home/uan-wsl2/Feather` 作为主开发入口；`nuttx`、`apps` 以及通用
-Feather 协议栈都作为 Feather super-project 下的 Git submodule 维护。
+`/home/uan-wsl2/Feather` 作为主开发入口；`nuttx` 和 `apps` 作为
+Feather super-project 下的 Git submodule 维护。
 
 ## 当前工作区
 
@@ -12,8 +12,6 @@ Feather 协议栈都作为 Feather super-project 下的 Git submodule 维护。
 /home/uan-wsl2/Feather/
 ├── nuttx/      submodule -> FeatherCore/nuttx
 ├── apps/       submodule -> FeatherCore/nuttx-apps
-├── stacks/
-│   └── fgfx/   submodule -> FeatherCore/graphics
 ├── tools/
 ├── docs/
 └── build/
@@ -24,11 +22,9 @@ Feather 协议栈都作为 Feather super-project 下的 Git submodule 维护。
 ```text
 nuttx: e2aa04fb4fc11d279c2648d83c1829ae933454a0
 apps:  7bae6e591d557035c7d44be84f49163bbd883f84
-fgfx:  d8dae5ced3a89c4a9e678d7f0c8947e1905c479b
 ```
 
-`nuttx` 和 `apps` 来自各自仓库的 `develop` 分支；`fgfx` 来自
-`FeatherCore/graphics` 的 `main` 分支。
+`nuttx` 和 `apps` 来自各自仓库的 `develop` 分支。
 
 旧目录 `/home/uan-wsl2/nuttx-work/nuttx` 和
 `/home/uan-wsl2/nuttx-work/apps` 仍可作为历史/临时工作区参考，但后续主线开发
@@ -57,14 +53,6 @@ NuttX apps submodule：
 path   -> /home/uan-wsl2/Feather/apps
 origin -> ssh://git@ssh.github.com:443/FeatherCore/nuttx-apps.git
 branch -> develop
-```
-
-Feather Graphics stack submodule：
-
-```text
-path   -> /home/uan-wsl2/Feather/stacks/fgfx
-origin -> ssh://git@ssh.github.com:443/FeatherCore/graphics.git
-branch -> main
 ```
 
 `nuttx` 和 `apps` 仓库仍建议保留 Apache 主线远程：
