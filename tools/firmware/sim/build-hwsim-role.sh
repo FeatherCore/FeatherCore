@@ -53,7 +53,10 @@ clean_build_dir()
 distclean_tree()
 {
   if [[ -e Make.defs ]]; then
-    make distclean
+    if ! make distclean; then
+      printf '==> make distclean failed; removing stale NuttX config artifacts\n'
+      rm -f Make.defs .config .config.orig defconfig
+    fi
   else
     rm -f Make.defs .config .config.orig defconfig
   fi
