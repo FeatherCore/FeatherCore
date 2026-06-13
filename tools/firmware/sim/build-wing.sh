@@ -11,16 +11,18 @@ set -euo pipefail
 usage()
 {
   printf 'Usage: %s [OPTIONS]\n\n' "$0"
-  printf 'Build NuttX simulator Wing widget demo using sim:nsh by default.\n\n'
+  printf 'Build the NuttX simulator with FRender and the standalone WING GUI demo enabled.\n\n'
+  printf 'The resulting simulator boots NSH, where frender_demo and wing_gui_demo are available as builtin commands.\n\n'
   printf 'Outputs:\n'
-  printf '  build/sim-wing      host executable for NuttX sim:nsh + wingdemo\n'
+  printf '  build/sim-wing      host executable for NuttX sim:<config> + frender_demo + wing_gui_demo\n'
   printf '  build/sim-wing.map  linker map, when produced by the build\n\n'
   printf 'Options:\n'
   printf '  -j, --jobs N        Parallel make jobs (default: 8)\n'
-  printf '      --config NAME   Build a custom sim config, for example fb\n'
-  printf '      --nsh           Build sim:nsh and enable the wingdemo command\n'
-  printf '      --frames N      Print a wingdemo command that renders N frames\n'
-  printf '      --no-clean      Reuse the current NuttX tree configuration\n'
+  printf '      --config NAME   Simulator config to start from (default: nsh)\n'
+  printf '      --nsh           Shortcut for --config nsh\n'
+  printf '      --width N       WING GUI demo software surface width (default: 320)\n'
+  printf '      --height N      WING GUI demo software surface height (default: 240)\n'
+  printf '      --no-clean      Reuse current NuttX configuration instead of distclean/configure\n'
   printf '  -h, --help          Show this help\n'
 }
 
@@ -36,24 +38,77 @@ sim_map="${build_dir}/sim-wing.map"
 jobs="${JOBS:-8}"
 clean_first=1
 sim_config="nsh"
-frames=""
+demo_width=320
+demo_height=240
 
-clean_build_dir()
+set_config_bool()
+{
+  local name="$1"
+  local value="$2"
+
+  if [[ "${value}" == "y" ]]; then
+    if grep -q "^# ${name} is not set" .config; then
+      sed -i "s/^# ${name} is not set/${name}=y/" .config
+    elif grep -q "^${name}=" .config; then
+      sed -i "s/^${name}=.*/${name}=y/" .config
+    else
+      printf '%s=y\n' "${name}" >> .config
+    fi
+  else
+    if grep -q "^${name}=" .config; then
+      sed -i "s/^${name}=.*/# ${name} is not set/" .config
+    elif ! grep -q "^# ${name} is not set" .config; then
+      printf '# %s is not set\n' "${name}" >> .config
+    fi
+  fi
+}
+
+set_config_int()
+{
+  local name="$1"
+  local value="$2"
+
+  if grep -q "^${name}=" .config; then
+    sed -i "s/^${name}=.*/${name}=${value}/" .config
+  elif grep -q "^# ${name} is not set" .config; then
+    sed -i "s/^# ${name} is not set/${name}=${value}/" .config
+  else
+    printf '%s=%s\n' "${name}" "${value}" >> .config
+  fi
+}
+
+set_config_string()
+{
+  local name="$1"
+  local value="$2"
+
+  if grep -q "^${name}=" .config; then
+    sed -i "s|^${name}=.*|${name}=\"${value}\"|" .config
+  elif grep -q "^# ${name} is not set" .config; then
+    sed -i "s|^# ${name} is not set|${name}=\"${value}\"|" .config
+  else
+    printf '%s="%s"\n' "${name}" "${value}" >> .config
+  fi
+}
+
+clean_outputs()
 {
   mkdir -p "${build_dir}"
   find "${build_dir}" -maxdepth 1 -type f -name 'sim-wing*' -delete
 }
 
-clean_wing_objects()
+clean_local_objects()
 {
   local dir
 
   for dir in \
+    "../apps/graphics/frender" \
     "../apps/graphics/wing" \
-    "../apps/examples/wingdemo"
+    "../apps/examples/frender_demo" \
+    "../apps/examples/wing_gui_demo"
   do
     if [[ -d "${dir}" ]]; then
-      find "${dir}" -maxdepth 1 -type f \( \
+      find "${dir}" -maxdepth 3 -type f \( \
         -name '*.o' -o \
         -name '*.d' -o \
         -name '*.gcda' -o \
@@ -75,149 +130,94 @@ distclean_tree()
   fi
 }
 
-configure_board()
+configure_sim()
 {
-  ./tools/configure.sh "$1"
+  ./tools/configure.sh "sim:${sim_config}"
   make clean
 }
 
-enable_config()
+prepare_host_options()
 {
-  local name="$1"
-
-  if grep -q "^# ${name} is not set" .config; then
-    sed -i "s/^# ${name} is not set/${name}=y/" .config
-  elif grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/${name}=y/" .config
-  else
-    printf '%s=y\n' "${name}" >> .config
-  fi
-}
-
-disable_config()
-{
-  local name="$1"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/# ${name} is not set/" .config
-  elif ! grep -q "^# ${name} is not set" .config; then
-    printf '# %s is not set\n' "${name}" >> .config
-  fi
-}
-
-set_config_string()
-{
-  local name="$1"
-  local value="$2"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s|^${name}=.*|${name}=\"${value}\"|" .config
-  elif grep -q "^# ${name} is not set" .config; then
-    sed -i "s|^# ${name} is not set|${name}=\"${value}\"|" .config
-  else
-    printf '%s="%s"\n' "${name}" "${value}" >> .config
-  fi
-}
-
-set_config_int()
-{
-  local name="$1"
-  local value="$2"
-
-  if grep -q "^${name}=" .config; then
-    sed -i "s/^${name}=.*/${name}=${value}/" .config
-  elif grep -q "^# ${name} is not set" .config; then
-    sed -i "s/^# ${name} is not set/${name}=${value}/" .config
-  else
-    printf '%s=%s\n' "${name}" "${value}" >> .config
-  fi
-}
-
-prepare_host_optional_romfs()
-{
-  if command -v genromfs >/dev/null 2>&1; then
-    return
-  fi
-
-  if grep -q '^CONFIG_ETC_ROMFS=y' .config; then
-    printf '==> genromfs not found; disabling CONFIG_ETC_ROMFS for this host build\n'
-    disable_config CONFIG_ETC_ROMFS
+  if ! command -v genromfs >/dev/null 2>&1 && \
+     grep -q '^CONFIG_ETC_ROMFS=y' .config; then
+    printf '==> genromfs not found; disabling CONFIG_ETC_ROMFS for host sim build\n'
+    set_config_bool CONFIG_ETC_ROMFS n
     make olddefconfig
   fi
 }
 
-enable_wing_fb_demo()
+enable_wing_gui_demo()
 {
-  printf '==> Enabling Wing widget demo as an NSH command\n'
+  printf '==> Enabling FRender + WING GUI demos for NSH\n'
 
-  disable_config CONFIG_GRAPHICS_LVGL
-  disable_config CONFIG_EXAMPLES_LVGLDEMO
+  set_config_bool CONFIG_EXAMPLES_WINGDEMO n
+  set_config_bool CONFIG_EXAMPLES_WING_DESKTOP_DEMO n
 
-  enable_config CONFIG_DRIVERS_VIDEO
-  enable_config CONFIG_VIDEO_FB
-  enable_config CONFIG_FB_UPDATE
-  enable_config CONFIG_SIM_X11FB
-  enable_config CONFIG_SIM_FRAMEBUFFER
+  set_config_bool CONFIG_DRIVERS_VIDEO y
+  set_config_bool CONFIG_VIDEO_FB y
+  set_config_bool CONFIG_FB_UPDATE y
+  set_config_bool CONFIG_SIM_X11FB y
+  set_config_bool CONFIG_SIM_FRAMEBUFFER y
   set_config_int CONFIG_SIM_FBWIDTH 640
   set_config_int CONFIG_SIM_FBHEIGHT 480
   set_config_int CONFIG_SIM_FBBPP 32
-  disable_config CONFIG_BOARD_LATE_INITIALIZE
-  enable_config CONFIG_BOARDCTL
-  enable_config CONFIG_BOARDCTL_POWEROFF
 
-  enable_config CONFIG_GRAPHICS_WING
-  enable_config CONFIG_EXAMPLES_WINGDEMO
-  enable_config CONFIG_BUILTIN
-  enable_config CONFIG_SYSTEM_NSH
-  enable_config CONFIG_NSH_BUILTIN_APPS
-  enable_config CONFIG_NSH_READLINE
-  set_config_int CONFIG_INIT_STACKSIZE 131072
-  set_config_int CONFIG_SYSTEM_NSH_STACKSIZE 131072
-  set_config_int CONFIG_EXAMPLES_WINGDEMO_STACKSIZE 131072
+  set_config_bool CONFIG_GRAPHICS_FRENDER y
+  set_config_bool CONFIG_GRAPHICS_FRENDER_SW y
+  set_config_bool CONFIG_GRAPHICS_FRENDER_FB_PRESENT y
+  set_config_bool CONFIG_EXAMPLES_FRENDER_DEMO y
+  set_config_string CONFIG_EXAMPLES_FRENDER_DEMO_PROGNAME frender_demo
+  set_config_int CONFIG_EXAMPLES_FRENDER_DEMO_PRIORITY 100
+  set_config_int CONFIG_EXAMPLES_FRENDER_DEMO_STACKSIZE 4096
+  set_config_int CONFIG_EXAMPLES_FRENDER_DEMO_WIDTH "${demo_width}"
+  set_config_int CONFIG_EXAMPLES_FRENDER_DEMO_HEIGHT "${demo_height}"
+
+  set_config_bool CONFIG_GRAPHICS_WING y
+  set_config_int CONFIG_GRAPHICS_WING_INPUT_QUEUE_SIZE 64
+  set_config_int CONFIG_GRAPHICS_WING_EVENT_QUEUE_SIZE 128
+  set_config_int CONFIG_GRAPHICS_WING_TIMER_MAX 8
+  set_config_int CONFIG_GRAPHICS_WING_ANIM_MAX 8
+  set_config_bool CONFIG_EXAMPLES_WING_GUI_DEMO y
+  set_config_string CONFIG_EXAMPLES_WING_GUI_DEMO_PROGNAME wing_gui_demo
+  set_config_int CONFIG_EXAMPLES_WING_GUI_DEMO_PRIORITY 100
+  set_config_int CONFIG_EXAMPLES_WING_GUI_DEMO_STACKSIZE 4096
+  set_config_int CONFIG_EXAMPLES_WING_GUI_DEMO_WIDTH "${demo_width}"
+  set_config_int CONFIG_EXAMPLES_WING_GUI_DEMO_HEIGHT "${demo_height}"
+
+  set_config_bool CONFIG_BUILTIN y
+  set_config_bool CONFIG_SYSTEM_NSH y
+  set_config_bool CONFIG_NSH_BUILTIN_APPS y
+  set_config_bool CONFIG_NSH_READLINE y
   set_config_string CONFIG_INIT_ENTRYPOINT nsh_main
-  set_config_string CONFIG_INIT_ARGS ""
-
-  set_config_int CONFIG_EXAMPLES_WINGDEMO_FRAMES 0
 
   make olddefconfig
-  verify_wing_fb_demo_config
 }
 
-verify_wing_fb_demo_config()
+verify_config()
 {
   local missing=0
   local name
 
   for name in \
-    CONFIG_DRIVERS_VIDEO \
     CONFIG_VIDEO_FB \
-    CONFIG_SIM_X11FB \
     CONFIG_SIM_FRAMEBUFFER \
+    CONFIG_GRAPHICS_FRENDER \
+    CONFIG_GRAPHICS_FRENDER_SW \
+    CONFIG_EXAMPLES_FRENDER_DEMO \
     CONFIG_GRAPHICS_WING \
-    CONFIG_EXAMPLES_WINGDEMO \
+    CONFIG_EXAMPLES_WING_GUI_DEMO \
     CONFIG_BUILTIN \
     CONFIG_SYSTEM_NSH \
     CONFIG_NSH_BUILTIN_APPS
   do
     if ! grep -q "^${name}=y" .config; then
-      printf 'ERROR: %s is not enabled by sim:%s\n' \
-        "${name}" "${sim_config}" >&2
+      printf 'ERROR: %s is not enabled for sim:%s\n' "${name}" "${sim_config}" >&2
       missing=1
     fi
   done
 
-  if grep -q '^CONFIG_GRAPHICS_LVGL=y' .config; then
-    printf 'ERROR: CONFIG_GRAPHICS_LVGL must be disabled for Wing\n' >&2
-    missing=1
-  fi
-
   if ! grep -q '^CONFIG_INIT_ENTRYPOINT="nsh_main"$' .config; then
     printf 'ERROR: CONFIG_INIT_ENTRYPOINT is not nsh_main\n' >&2
-    missing=1
-  fi
-
-  if grep -q '^CONFIG_BOARD_LATE_INITIALIZE=y' .config; then
-    printf 'ERROR: CONFIG_BOARD_LATE_INITIALIZE must be disabled so wingdemo opens the X11 framebuffer lazily\n' >&2
     missing=1
   fi
 
@@ -240,8 +240,12 @@ while [[ $# -gt 0 ]]; do
       sim_config="nsh"
       shift
       ;;
-    --frames)
-      frames="$2"
+    --width)
+      demo_width="$2"
+      shift 2
+      ;;
+    --height)
+      demo_height="$2"
       shift 2
       ;;
     --no-clean)
@@ -253,33 +257,34 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "ERROR: unknown option: $1" >&2
+      printf 'ERROR: unknown option: %s\n' "$1" >&2
       usage >&2
       exit 2
       ;;
   esac
 done
 
-printf '==> Cleaning simulator Wing build outputs\n'
-clean_build_dir
-clean_wing_objects
+printf '==> Cleaning simulator WING GUI build outputs\n'
+clean_outputs
+clean_local_objects
 
 if [[ "${clean_first}" -ne 0 ]]; then
   printf '==> Configuring sim:%s\n' "${sim_config}"
   distclean_tree
-  configure_board "sim:${sim_config}"
+  configure_sim
 else
   printf '==> Reusing current NuttX configuration\n'
 fi
 
-prepare_host_optional_romfs
-enable_wing_fb_demo
+prepare_host_options
+enable_wing_gui_demo
+verify_config
 
-printf '==> Building simulator Wing image\n'
+printf '==> Building simulator FRender/WING GUI image\n'
 make "-j${jobs}"
 
 if [[ ! -x nuttx ]]; then
-  echo "ERROR: simulator executable was not produced: nuttx" >&2
+  printf 'ERROR: simulator executable was not produced: nuttx\n' >&2
   exit 1
 fi
 
@@ -290,19 +295,15 @@ if [[ -f nuttx.map ]]; then
   cp nuttx.map "${sim_map}"
 fi
 
-printf '\n==> Simulator Wing output\n'
-printf '  Wing NSH widget demo executable:\n'
-printf '    config:     sim:%s\n' "${sim_config}"
-printf '    file:       %s\n' "${sim_exe}"
-printf '    size:       %s bytes\n' "$(wc -c < "${sim_exe}" | tr -d '[:space:]')"
-if [[ -n "${frames}" ]]; then
-  printf '    run:        printf "wingdemo --frames %s\\\\n" | %s\n' \
-    "${frames}" "${sim_exe}"
-else
-  printf '    run:        printf "wingdemo\\\\n" | %s\n' "${sim_exe}"
-fi
+printf '\n==> Simulator FRender/WING GUI output\n'
+printf '  config:     sim:%s\n' "${sim_config}"
+printf '  executable: %s\n' "${sim_exe}"
+printf '  size:       %s bytes\n' "$(wc -c < "${sim_exe}" | tr -d '[:space:]')"
+printf '  run:        printf "frender_demo\\nwing_gui_demo\\n" | %s\n' "${sim_exe}"
+printf '  demos:      frender_demo, wing_gui_demo\n'
+printf '  note:       frender_demo validates command list + software backend + optional framebuffer present\n'
+printf '              wing_gui_demo validates WING GUI without WING Desktop\n'
 
 if [[ -f "${sim_map}" ]]; then
-  printf '\n  Linker map:\n'
-  printf '    file:       %s\n' "${sim_map}"
+  printf '  map:        %s\n' "${sim_map}"
 fi
