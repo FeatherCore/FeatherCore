@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import select
 import signal
 import subprocess
 import sys
@@ -31,6 +32,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parents[2]
 DEFAULT_OUT = ROOT / "build" / "bt-hwsim-usecases"
 DEFAULT_MEDIUM_DIR = Path("/tmp/nuttx-bthwsim")
+DEFAULT_CASE_TIMEOUT = 600.0
+COMMAND_WRITE_TIMEOUT = 10.0
 
 
 @dataclass(frozen=True)
@@ -48,6 +51,12 @@ CASES: tuple[Case, ...] = (
     Case("ble-ip-iperf-tcp-reverse", ("ble2", "ble1")),
     Case("ble-ip-iperf-udp", ("ble1", "ble2")),
     Case("ble-ip-iperf-udp-reverse", ("ble2", "ble1")),
+    Case("ble-ip-closeout-full", ("ble1", "ble2")),
+    Case("bluez-ipsp-closeout-full", ("ble1", "ble2")),
+    Case("bluez-daemon-ipsp-closeout-full", ("ble1", "ble2")),
+    Case("bluez-net-current-complete-closeout", ("bt1", "bt2", "ble1", "ble2")),
+    Case("bluez-net-upstream-convergence-closeout", ("bt1", "bt2", "ble1", "ble2")),
+    Case("bluez-current-functional-closeout", ("bt1", "bt2", "ble1", "ble2")),
     Case("hci-bredr-medium", ("bt1", "bt2")),
     Case("l2cap-native-basic", ("bt1", "bt2")),
     Case("hci-le-lifecycle", ("ble1",)),
@@ -63,6 +72,7 @@ CASES: tuple[Case, ...] = (
     Case("bluez-mgmt-passkey-neg", ("ble1",)),
     Case("bluez-mgmt-cancel-pair", ("ble1",)),
     Case("bluez-mgmt-cancel-pair-pending", ("ble1",)),
+    Case("bluez-mgmt-daemon-bootstrap", ("ble1",)),
     Case("bluez-mgmt-pair-unpair", ("ble1",)),
     Case("bluez-mgmt-lifecycle", ("ble1",)),
     Case("bluez-mgmt-reconnect-stress", ("ble1",)),
@@ -83,6 +93,7 @@ CASES: tuple[Case, ...] = (
     Case("bluez-hciuser-init-sequence-monitor", ("ble1",)),
     Case("bluez-hciuser-full-abi", ("ble1",)),
     Case("bluez-hciuser-adv-scan-medium", ("ble1", "ble2")),
+    Case("bluez-hci-mgmt-socket-closeout-full", ("ble1", "ble2")),
     Case("mgmt-noio", ("ble1",)),
     Case("mgmt-confirm", ("ble1",)),
     Case("mgmt-passkey", ("ble1",)),
@@ -94,12 +105,19 @@ CASES: tuple[Case, ...] = (
     Case("bluez-network-daemon-profile", ("bt1", "bt2")),
     Case("bluez-network-daemon-role-matrix", ("bt1", "bt2")),
     Case("bluez-network-daemon-full-lifecycle", ("bt1", "bt2")),
+    Case("bluez-network-closeout-full", ("bt1", "bt2")),
     Case("bluez-network-error-path", ("bt1",)),
     Case("bluez-network-iperf-tcp", ("bt1", "bt2")),
     Case("bluez-network-iperf-tcp-reverse", ("bt2", "bt1")),
     Case("bluez-network-iperf-udp", ("bt1", "bt2")),
     Case("bluez-network-iperf-udp-reverse", ("bt2", "bt1")),
     Case("bluez-network-iperf-tcp-soak", ("bt1", "bt2")),
+    Case("bluez-network-iperf-matrix", ("bt1", "bt2")),
+    Case("bluez-network-frag-ping", ("bt1", "bt2")),
+    Case("bluez-network-jumbo-ping", ("bt1", "bt2")),
+    Case("bluez-network-mtu-ping", ("bt1", "bt2")),
+    Case("bluez-network-mtu-soak", ("bt1", "bt2")),
+    Case("bluez-network-mtu-reconnect-stress", ("bt1", "bt2")),
     Case("bluez-network-reconnect", ("bt1", "bt2")),
     Case("bluez-network-reconnect-stress", ("bt1", "bt2")),
     Case("bluez-bneptest-iperf-tcp", ("bt1", "bt2")),
@@ -135,6 +153,7 @@ CASES: tuple[Case, ...] = (
     Case("bluez-a2dp-sbc-codec-extended", ("bt1", "bt2")),
     Case("bluez-a2dp-sbc-codec-abort", ("bt1", "bt2")),
     Case("bluez-a2dp-sbc-codec-reconnect", ("bt1", "bt2")),
+    Case("bluez-a2dp-sbc-codec-concurrent", ("bt1", "bt2")),
     Case("bluez-a2dp-transport-reconnect", ("bt1", "bt2")),
     Case("bluez-a2dp-transport-bidir", ("bt1", "bt2")),
     Case("bluez-a2dp-transport-bidir-teardown", ("bt1", "bt2")),
@@ -153,6 +172,39 @@ CASES: tuple[Case, ...] = (
     Case("bluez-a2dp-avrcp-player-settings-set", ("bt1", "bt2")),
     Case("bluez-daemon-a2dp-full", ("bt1", "bt2")),
     Case("bluez-daemon-a2dp-reconnect-full", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-dbus-client-full", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-dbus-client-busy", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-full-concurrent", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-full-concurrent-reconnect", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-full-concurrent-soak", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-integrated-profile", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-integrated-reconnect", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-session-ownership", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-error-policy", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-upstream-session", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-upstream-reconnect", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-upstream-transactions", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-media-transport-fd", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-codec-policy", ("bt1", "bt2")),
+    Case("bluez-daemon-a2dp-closeout-full", ("bt1", "bt2")),
+    Case("bluez-a2dp-current-complete-closeout", ("bt1", "bt2")),
+    Case("bluez-a2dp-upstream-convergence-closeout", ("bt1", "bt2")),
+    Case("bluez-basic-mgmt-flow", ("ble1", "ble2")),
+    Case("bluez-basic-scan-connect-auth-flow", ("ble2", "ble1")),
+    Case("bluez-basic-upstream-convergence-closeout", ("bt1", "bt2", "ble2", "ble1")),
+    Case("bluez-hid-hogp-profile-closeout", ("bt1", "bt2", "ble2", "ble1")),
+    Case("bluez-hfp-hsp-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-obex-pbap-opp-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-obex-map-mns-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-obex-ftp-sync-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-mesh-profile-closeout", ("ble1", "ble2")),
+    Case("bluez-gatt-profile-closeout", ("ble1", "ble2")),
+    Case("bluez-asha-profile-closeout", ("ble1", "ble2")),
+    Case("bluez-obex-bip-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-print-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-iap-profile-closeout", ("bt1", "bt2")),
+    Case("bluez-midi-profile-closeout", ("ble1", "ble2")),
+    Case("bluez-ranging-profile-closeout", ("ble1", "ble2")),
     Case("le-audio", ("ble1", "ble2")),
     Case("bluez-le-audio", ("ble1", "ble2")),
     Case("bluez-le-audio-profile", ("ble1", "ble2")),
@@ -168,6 +220,45 @@ CASES: tuple[Case, ...] = (
     Case("bluez-le-audio-transport-bidir-release-reconfig", ("ble1", "ble2")),
     Case("bluez-le-audio-transport-bidir-reconnect", ("ble1", "ble2")),
     Case("bluez-le-audio-full-lifecycle", ("ble1", "ble2")),
+    Case("bluez-le-audio-daemon-full-lifecycle", ("ble1", "ble2")),
+    Case("bluez-le-audio-dbus-client-full", ("ble1", "ble2")),
+    Case("bluez-le-audio-lc3-codec-transport", ("ble1", "ble2")),
+    Case("bluez-le-audio-iso-dataplane-soak", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-iso-dataplane-soak", ("ble1", "ble2")),
+    Case("bluez-le-audio-daemon-profile-flow", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-profile-flow", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-profile-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-error-recovery", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-bap-ascs-error-matrix", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-dbus-ownership", ("ble1", "ble2")),
+    Case("bluez-le-audio-bap-ascs-dbus-owner-recovery", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-dbus-bap-ascs-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-full-stack", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-full-stack-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-mainloop-cleanup", ("ble1", "ble2")),
+    Case("bluez-le-audio-daemon-broadcast-profile-flow", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-broadcast-profile-flow", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-daemon-broadcast-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-lc3-bidir", ("ble1", "ble2")),
+    Case("bluez-le-audio-coordinated-services", ("ble1", "ble2")),
+    Case("bluez-le-audio-cap-csip-group", ("ble1", "ble2")),
+    Case("bluez-le-audio-tmap-mcp-ccp-flow", ("ble1", "ble2")),
+    Case("bluez-le-audio-broadcast-multibis", ("ble1", "ble2")),
+    Case("bluez-le-audio-broadcast-multibis-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-bass-scan-delegator", ("ble1", "ble2")),
+    Case("bluez-le-audio-daemon-integrated-profile", ("ble1", "ble2")),
+    Case("bluez-le-audio-daemon-integrated-profile-reconnect", ("ble1", "ble2")),
+    Case("bluez-le-audio-bap-pacs-ascs-session", ("ble1", "ble2")),
+    Case("bluez-le-audio-bap-pacs-ascs-reconnect-recovery", ("ble1", "ble2")),
+    Case("bluez-le-audio-bap-pacs-ascs-metadata-reconfig", ("ble1", "ble2")),
+    Case("bluez-le-audio-codec-qos-policy-matrix", ("ble1", "ble2")),
+    Case("bluez-le-audio-role-soak", ("ble1", "ble2")),
+    Case("bluez-le-audio-umbrella", ("ble1", "ble2")),
+    Case("bluez-le-audio-controller-setup", ("ble1",)),
+    Case("bluez-le-audio-controller-reconnect", ("ble1",)),
+    Case("bluez-hid-upstream-convergence-closeout",
+         ("bt1", "bt2", "ble1", "ble2")),
+    Case("bluez-gatt-upstream-convergence-closeout", ("ble1", "ble2")),
 )
 
 
@@ -180,6 +271,22 @@ ROLE_BINARIES: dict[str, str] = {
 
 CASE_MIN_SETTLE_DELAYS: dict[str, float] = {
     "ble-ip-reconnect-stress": 55.0,
+    "ble-ip-closeout-full": 65.0,
+    "bluez-ipsp-closeout-full": 65.0,
+    "bluez-daemon-ipsp-closeout-full": 65.0,
+    "bluez-net-current-complete-closeout": 95.0,
+    "bluez-net-upstream-convergence-closeout": 95.0,
+    "bluez-current-functional-closeout": 240.0,
+    "bluez-hci-mgmt-socket-closeout-full": 120.0,
+    "bluez-network-iperf-matrix": 45.0,
+    "bluez-network-frag-ping": 22.0,
+    "bluez-network-jumbo-ping": 22.0,
+    "bluez-network-mtu-ping": 18.0,
+    "bluez-network-mtu-soak": 34.0,
+    "bluez-network-mtu-reconnect-stress": 38.0,
+    "bluez-network-closeout-full": 55.0,
+    "bluez-a2dp-current-complete-closeout": 70.0,
+    "bluez-a2dp-upstream-convergence-closeout": 70.0,
 }
 
 
@@ -203,7 +310,33 @@ def role_binary(role: str) -> Path:
     return ROOT / "build" / ROLE_BINARIES[role]
 
 
+def close_stdin(procs: list[subprocess.Popen[bytes]]) -> None:
+    for proc in procs:
+        stdin = proc.stdin
+        if stdin is not None and not stdin.closed:
+            try:
+                os.close(stdin.fileno())
+            except (BrokenPipeError, OSError):
+                pass
+            proc.stdin = None
+
+
+def wait_procs(procs: list[subprocess.Popen[bytes]], timeout: float) -> None:
+    deadline = time.monotonic() + timeout
+
+    for proc in procs:
+        remaining = max(0.0, deadline - time.monotonic())
+        if proc.poll() is None:
+            try:
+                proc.wait(timeout=remaining)
+            except subprocess.TimeoutExpired:
+                pass
+
+
 def terminate(procs: list[subprocess.Popen[bytes]]) -> None:
+    close_stdin(procs)
+    wait_procs(procs, 0.5)
+
     for proc in procs:
         if proc.poll() is None:
             try:
@@ -211,7 +344,7 @@ def terminate(procs: list[subprocess.Popen[bytes]]) -> None:
             except ProcessLookupError:
                 pass
 
-    time.sleep(0.5)
+    wait_procs(procs, 0.5)
 
     for proc in procs:
         if proc.poll() is None:
@@ -219,6 +352,8 @@ def terminate(procs: list[subprocess.Popen[bytes]]) -> None:
                 os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
             except ProcessLookupError:
                 pass
+
+    wait_procs(procs, 1.0)
 
 
 def reset_medium(medium_dir: Path = DEFAULT_MEDIUM_DIR) -> None:
@@ -255,8 +390,29 @@ def send_command(proc: subprocess.Popen[bytes], line: str) -> None:
     if proc.poll() is not None:
         raise RuntimeError(f"sim exited before command: {line}")
 
-    proc.stdin.write((line + "\n").encode())
-    proc.stdin.flush()
+    fd = proc.stdin.fileno()
+    data = (line + "\n").encode()
+    deadline = time.monotonic() + COMMAND_WRITE_TIMEOUT
+
+    while data:
+        if proc.poll() is not None:
+            raise RuntimeError(f"sim exited before command: {line}")
+
+        remaining = deadline - time.monotonic()
+        if remaining <= 0.0:
+            raise TimeoutError(f"timed out writing command: {line}")
+
+        _, writable, _ = select.select([], [fd], [], remaining)
+        if not writable:
+            raise TimeoutError(f"timed out writing command: {line}")
+
+        try:
+            written = os.write(fd, data)
+        except BrokenPipeError as exc:
+            raise RuntimeError(
+                f"sim closed stdin before command: {line}") from exc
+
+        data = data[written:]
 
 
 def send_commands(procs: list[subprocess.Popen[bytes]],
@@ -275,8 +431,13 @@ def send_commands(procs: list[subprocess.Popen[bytes]],
             time.sleep(line_delay)
 
 
+def case_timeout_handler(_signum: int, _frame: object) -> None:
+    raise TimeoutError("case timed out")
+
+
 def run_case(case: Case, out_dir: Path, startup_delay: float,
-             line_delay: float, settle_delay: float) -> dict[str, object]:
+             line_delay: float, settle_delay: float,
+             case_timeout: float) -> dict[str, object]:
     procs: list[subprocess.Popen[bytes]] = []
     logs: dict[str, Path] = {}
     result: dict[str, object] = {
@@ -286,6 +447,9 @@ def run_case(case: Case, out_dir: Path, startup_delay: float,
         "logs": {},
         "run_error": "",
     }
+
+    old_handler = signal.signal(signal.SIGALRM, case_timeout_handler)
+    signal.setitimer(signal.ITIMER_REAL, case_timeout)
 
     try:
         reset_medium()
@@ -308,6 +472,7 @@ def run_case(case: Case, out_dir: Path, startup_delay: float,
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 cwd=str(ROOT),
+                bufsize=0,
                 preexec_fn=os.setsid,
             )
             procs.append(proc)
@@ -321,11 +486,14 @@ def run_case(case: Case, out_dir: Path, startup_delay: float,
             for role in case.roles
         ]
         send_commands(procs, command_files, line_delay)
+        close_stdin(procs)
 
         time.sleep(settle_delay)
     except Exception as exc:  # noqa: BLE001 - report and still clean up
         result["run_error"] = str(exc)
     finally:
+        signal.setitimer(signal.ITIMER_REAL, 0.0)
+        signal.signal(signal.SIGALRM, old_handler)
         terminate(procs)
 
     return result
@@ -378,6 +546,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=10.0,
         help="Seconds to wait before terminating sim roles")
+    parser.add_argument(
+        "--case-timeout",
+        type=float,
+        default=DEFAULT_CASE_TIMEOUT,
+        help="Maximum seconds to allow one usecase before cleanup")
     return parser.parse_args()
 
 
@@ -401,15 +574,21 @@ def main() -> int:
         assert case is not None
         settle_delay = max(args.settle_delay,
                            CASE_MIN_SETTLE_DELAYS.get(case.name, 0.0))
+        started = time.monotonic()
+        print(f"RUN-START {case.name}", flush=True)
         result = run_case(case, out_dir, args.startup_delay,
-                          args.line_delay, settle_delay)
+                          args.line_delay, settle_delay,
+                          args.case_timeout)
+        elapsed = time.monotonic() - started
+        result["elapsed"] = round(elapsed, 3)
         run_results.append(result)
         if result["run_error"]:
             run_failed = True
-            print(f"RUN-ERROR {case.name}: {result['run_error']}",
-                  file=sys.stderr)
+            print(f"RUN-ERROR {case.name} elapsed={elapsed:.1f}s: "
+                  f"{result['run_error']}",
+                  file=sys.stderr, flush=True)
         else:
-            print(f"RUN-DONE {case.name}")
+            print(f"RUN-DONE {case.name} elapsed={elapsed:.1f}s", flush=True)
 
     validate_rc = 0
     if not args.no_validate:
@@ -425,7 +604,7 @@ def main() -> int:
     }
     manifest_path = out_dir / "run-results.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))
-    print(f"RUN-MANIFEST {manifest_path}")
+    print(f"RUN-MANIFEST {manifest_path}", flush=True)
 
     return 1 if run_failed or validate_rc != 0 else 0
 

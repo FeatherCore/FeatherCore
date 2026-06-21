@@ -1,3 +1,1662 @@
+## 2026-06-14 A2DP upstream AVDTP session flow closeout
+
+A2DP closeout added a gate for an upstream-shaped AVDTP/MediaTransport session
+flow.  The bridge now validates endpoint select, set configuration,
+open/start, suspend/close, MediaTransport binding, A2DP resume/cancel id
+cleanup, and final transport detach.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-session-flow.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-session-flow.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-session-flow.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-session-flow/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-a2dp-session=select:1,set-config:1,open-start:1,suspend-close:1,total:4 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped
+  AVDTP/MediaTransport session flow evidence.
+
+Current boundary:
+
+- AVDTP/MediaTransport session flow is represented by NuttX-side
+  upstream-shaped mirror logic.
+- The next A2DP convergence target remains replacing mirror flow code with
+  directly imported upstream AVDTP/A2DP session callbacks.
+
+## 2026-06-14 A2DP upstream media adapter lifecycle closeout
+
+A2DP closeout added a gate for upstream-shaped `media.c` media adapter
+lifecycle.  The bridge now validates adapter probe/register, timestamping
+capability capture, endpoint/player feature aggregation, feature update after
+endpoint removal, and adapter remove cleanup of apps/endpoints/players.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-media-adapter.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-media-adapter.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-media-adapter.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-media-adapter/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-media-adapter=probe:1,features:1,remove:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped media
+  adapter probe/features/remove lifecycle evidence.
+
+Current boundary:
+
+- Media adapter lifecycle is represented by NuttX-side upstream-shaped mirror
+  logic.
+- The next A2DP convergence target remains replacing mirror code with directly
+  imported upstream media adapter probe/remove/update-features behavior.
+
+## 2026-06-14 A2DP upstream local player lifecycle closeout
+
+A2DP closeout added a gate for upstream-shaped `media.c` local player
+lifecycle.  The bridge now validates RegisterPlayer object creation, property
+watch/seek watch ownership, track/settings/status updates, and
+UnregisterPlayer cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-local-player.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-local-player.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-local-player.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-local-player/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-local-player=register:1,properties:1,unregister:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped local
+  player register/properties/unregister lifecycle evidence.
+
+Current boundary:
+
+- Local player lifecycle is represented by NuttX-side upstream-shaped mirror
+  logic.
+- The next A2DP convergence target remains replacing mirror code with directly
+  imported upstream local player creation/properties/cleanup behavior.
+
+## 2026-06-14 A2DP upstream media app lifecycle closeout
+
+A2DP closeout added a gate for upstream-shaped `media.c` application
+lifecycle.  The bridge now validates Media1 RegisterApplication app creation,
+proxy endpoint/player ownership, UnregisterApplication cleanup, and client
+disconnect cleanup of app/endpoints/players/proxies.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-media-app.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-media-app.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-media-app.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-media-app/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-media-app=register:1,unregister:1,disconnect:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped media app
+  register/unregister/disconnect lifecycle evidence.
+
+Current boundary:
+
+- Media app lifecycle is represented by NuttX-side upstream-shaped mirror
+  logic.
+- The next A2DP convergence target remains replacing mirror code with directly
+  imported upstream `create_app()` / application cleanup behavior.
+
+## 2026-06-14 A2DP upstream endpoint request lifecycle closeout
+
+A2DP closeout added a gate for upstream-shaped `media.c` endpoint request
+cleanup.  The bridge now validates single request cancel, cancel-all cleanup,
+and endpoint destroy cleanup for request, transport, sender/path/uuid, and
+adapter endpoint ownership.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-endpoint-request.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-endpoint-request.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-endpoint-request.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-endpoint-request/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-endpoint-request=cancel:1,cancel-all:1,destroy:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped endpoint
+  request cancel/cancel-all/destroy lifecycle evidence.
+
+Current boundary:
+
+- Endpoint request cleanup is represented by NuttX-side upstream-shaped mirror
+  logic.
+- The next A2DP convergence target remains replacing mirror cleanup code with
+  directly imported upstream `media_endpoint_cancel*()` and
+  `media_endpoint_destroy()` behavior.
+
+## 2026-06-14 A2DP upstream endpoint config policy closeout
+
+A2DP closeout added a gate for upstream-shaped `media.c` endpoint
+configuration lifecycle.  The bridge now validates SelectConfiguration request
+cleanup, SetConfiguration request/transport binding, and ClearConfiguration
+transport detachment/final cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-endpoint-config.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-endpoint-config.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-endpoint-config.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-endpoint-config/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-endpoint-config=select:1,set:1,clear:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped endpoint
+  select/set/clear configuration lifecycle evidence.
+
+Current boundary:
+
+- Endpoint configuration lifecycle is represented by NuttX-side upstream-shaped
+  mirror logic.
+- The next A2DP convergence target remains replacing mirror policy code with
+  directly imported upstream `media.c` endpoint request handlers.
+
+## 2026-06-14 A2DP upstream error policy closeout
+
+A2DP closeout added a gate for upstream-shaped error policy.  The bridge now
+validates MediaTransport method errors for already-owned acquire,
+try-acquire while in use, release without owner, select while in use, and
+unselect without owner.  It also validates Media1 registration errors for
+duplicate/missing endpoint, player, and application objects.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-error-policy.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-error-policy.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-error-policy.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-error-policy/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-error-policy=transport-methods:1,media-registration:1,total:2 ... final-ok=1`.
+- The validator now rejects an A2DP bridge that lacks upstream-shaped
+  transport method and media registration error-policy evidence.
+
+Current boundary:
+
+- Error policy is represented by NuttX-side upstream-shaped mirror logic.
+- The next A2DP convergence target remains replacing mirror policy code with
+  directly imported upstream method handlers and D-Bus error replies.
+
+## 2026-06-14 A2DP upstream transport ops policy closeout
+
+A2DP closeout added a gate for the upstream BlueZ `media_transport_ops`
+dispatch policy.  The bridge now validates A2DP source/sink UUID selection,
+presence of owner/resume/suspend/cancel/set_state ops, and an A2DP ops
+lifecycle path that drives requesting -> active -> suspending -> idle while
+clearing resume/cancel ids.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-transport-ops.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-transport-ops.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-transport-ops.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-transport-ops/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-transport-ops=uuid:1,dispatch:1,lifecycle:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP MediaTransport bridge that lacks upstream
+  transport ops UUID, dispatch, and lifecycle evidence.
+
+Current boundary:
+
+- The compat bridge now mirrors upstream `media_transport_ops` dispatch policy.
+- The next A2DP convergence target remains replacing mirror policy code with
+  directly imported upstream `transport_ops[]` and A2DP ops callbacks.
+
+## 2026-06-14 A2DP upstream transport state policy closeout
+
+A2DP closeout added a gate for the exact upstream BlueZ `transport.c`
+state policy.  The bridge now validates `state2str()` behavior for idle,
+pending, broadcasting, requesting, active, and suspending states, validates
+`state_in_use()` semantics, and verifies the pending -> requesting -> active
+-> suspending -> idle transition path.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-state-policy.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-state-policy.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-state-policy.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-state-policy/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-state-policy=state2str:1,in-use:1,transitions:1,total:3 ... final-ok=1`.
+- The validator now rejects an A2DP MediaTransport bridge that lacks the
+  upstream state string, in-use, and transition policy evidence.
+
+Current boundary:
+
+- The compat bridge now mirrors upstream `transport.c` state policy.
+- The next A2DP convergence target remains replacing mirror policy code with
+  directly imported upstream `transport_set_state()` and related callbacks.
+
+## 2026-06-14 A2DP upstream-named object graph closeout
+
+A2DP closeout anchored the NuttX Media/Transport bridge ledger to the actual
+upstream BlueZ object graph names from `profiles/audio/media.c` and
+`profiles/audio/transport.c`.  The bridge now validates relationships matching
+`media_adapter`, `media_endpoint`, `endpoint_request`, `media_transport`,
+`media_owner`, `media_request`, `a2dp_transport`, and `media_transport_ops`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-upstream-object-graph.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-upstream-object-graph.log`
+- `FeatherCore/build/logs/run-a2dp-upstream-object-graph.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-object-graph/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... upstream-object-graph=media:1,transport:1,endpoint-request:1,total:3 ... final-ok=1`.
+- The validator now rejects a Media/Transport bridge that lacks an
+  upstream-named object graph relationship gate.
+
+Current boundary:
+
+- The compat graph now mirrors upstream object names and ownership edges.
+- The next A2DP convergence target remains replacing these mirror structs with
+  directly imported upstream `media.c` / `transport.c` structures and handlers.
+
+## 2026-06-14 A2DP D-Bus request/error lifecycle semantic closeout
+
+A2DP closeout advanced the BlueZ Media/Transport bridge ownership model with
+explicit D-Bus request lifecycle semantics.  The bridge now validates successful
+Acquire/Release-style replies, TryAcquire busy/error reply cleanup, duplicate
+registration rejection, missing-object rejection, owner-disconnect cleanup, and
+no leaked pending request/message refs.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-lifecycle-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-lifecycle-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-lifecycle-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-lifecycle-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... lifecycle-semantics=dbus-requests:1,errors:1,total:2 ... final-ok=1`.
+- The validator now rejects Media/Transport ownership that lacks explicit
+  successful request and error lifecycle evidence.
+
+Current boundary:
+
+- D-Bus request/error lifecycle behavior is represented by NuttX-side
+  upstream-shaped semantic ledgers.
+- The next A2DP convergence target remains replacing these ledgers with direct
+  imported upstream `profiles/audio/media.c` / `profiles/audio/transport.c`
+  request objects and callbacks.
+
+## 2026-06-14 A2DP Media/Transport ownership semantic closeout
+
+A2DP closeout advanced the BlueZ Media/Transport bridge from handler semantics
+to object and request ownership semantics.  The bridge now validates D-Bus
+object registration/release, owner watch cleanup, pending request ownership,
+message ref/reply cleanup, fd handoff, and final-zero lifecycle accounting.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-ownership-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-ownership-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-ownership-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-ownership-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... ownership-semantics=objects:1,requests:1,final-zero:1,total:3 ... final-ok=1`.
+- The validator now rejects a Media/Transport bridge that lacks object,
+  request, and final-zero ownership evidence.
+
+Current boundary:
+
+- Media/Transport object and request ownership are represented by NuttX-side
+  upstream-shaped semantic ledgers.
+- The next A2DP convergence target remains replacing these ledgers with direct
+  imported upstream `profiles/audio/media.c` / `profiles/audio/transport.c`
+  object and request structures.
+
+## 2026-06-14 A2DP Media1 semantic wrapper closeout
+
+A2DP closeout advanced the BlueZ `Media1` bridge side from callable-only
+coverage to explicit lifecycle semantics.  The bridge now validates
+`RegisterEndpoint`, `UnregisterEndpoint`, `RegisterPlayer`,
+`UnregisterPlayer`, `RegisterApplication`, and `UnregisterApplication`, plus
+`SupportedUUIDs` and `SupportedFeatures` property getters.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-media-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-media-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-media-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-media-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... media-semantics=methods:6,properties:2,total:8 ... final-ok=1`.
+- The validator now rejects a Media1 handler family that only exposes callable
+  method/property symbols without registration and property semantics.
+
+Current boundary:
+
+- MediaTransport and Media1 handler families now both have NuttX-side
+  upstream-shaped compat semantics.
+- The next A2DP convergence target remains direct imported upstream
+  `profiles/audio/media.c` / `profiles/audio/transport.c` D-Bus object and
+  request ownership.
+
+## 2026-06-14 A2DP transport property semantic wrapper closeout
+
+A2DP closeout advanced the MediaTransport property bridge from callable-only
+coverage to explicit D-Bus property semantics.  The bridge now validates
+getter semantics for `Device`, `UUID`, `Codec`, `Configuration`, `State`,
+`Delay`, `Volume`, and experimental `Endpoint`, setter semantics for `Delay`
+and `Volume`, plus existence predicates for `Delay`, `Volume`, and
+`Endpoint`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-transport-property-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-transport-property-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-transport-property-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-transport-property-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... property-semantics=getters:8,setters:2,exists:3,total:13 ... final-ok=1`.
+- The validator now rejects a MediaTransport property family that only exposes
+  callable handlers without property value/set/existence semantics.
+
+Current boundary:
+
+- MediaTransport method and property families now both have NuttX-side
+  upstream-shaped compat semantics.
+- The next A2DP convergence target remains direct imported upstream
+  `profiles/audio/transport.c` object ownership and D-Bus request handling.
+
+## 2026-06-14 A2DP transport full method semantic wrapper closeout
+
+A2DP closeout advanced every MediaTransport method bridge wrapper from
+callable-only surface coverage to explicit upstream-shaped lifecycle semantics.
+`Acquire`, `TryAcquire`, `Release`, `Select`, and `Unselect` now each execute a
+stateful compat path before the bridge can report success.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-transport-full-method-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-transport-full-method-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-transport-full-method-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-transport-full-method-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... handler-semantics=acquire:1,try-acquire:1,release:1,select:1,unselect:1,total:5 ... final-ok=1`.
+- The validator now rejects a MediaTransport method family that only exposes
+  callable symbols without per-method semantics.
+
+Current boundary:
+
+- The complete MediaTransport method family now has NuttX-side compat
+  lifecycle semantics.
+- The wrappers still need to keep converging toward direct imported upstream
+  `profiles/audio/transport.c` handler ownership and D-Bus object state.
+
+## 2026-06-14 A2DP transport acquire/release semantic wrapper closeout
+
+A2DP closeout advanced the MediaTransport method bridge from named-callable
+symbols to lifecycle-bearing wrappers for `Acquire` and `Release`.  The bridge
+now validates an upstream-shaped transport state transition: idle -> requesting
+-> active for acquire, and active -> releasing -> idle for release, including
+owner/request/fd/MTU and resume/suspend side effects.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-transport-method-semantics.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-transport-method-semantics.log`
+- `FeatherCore/build/logs/run-a2dp-transport-method-semantics.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-transport-method-semantics/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and
+  bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... handler-semantics=acquire:1,release:1,acquire-release:2 ... final-ok=1`.
+- The validator now requires this semantic wrapper evidence, so generic
+  callable symbols alone no longer satisfy the A2DP bridge gate.
+
+Current boundary:
+
+- `Acquire` and `Release` now carry explicit MediaTransport lifecycle semantics
+  in the NuttX bridge.
+- The wrappers are still compat implementations, not unmodified upstream
+  `profiles/audio/transport.c` handler bodies.
+
+## 2026-06-14 A2DP transport method wrapper symbol closeout
+
+A2DP closeout replaced the first handler-family generic bridge stub with named callable wrapper symbols.  The MediaTransport method bridge entries in `bluez/upstream_media_transport_bridge.c` now point to separate wrapper symbols for `acquire`, `try_acquire`, `release`, `select_transport`, and `unselect_transport`, instead of sharing one generic handler stub.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-transport-method-symbols.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-transport-method-symbols.log`
+- `FeatherCore/build/logs/run-a2dp-transport-method-symbols.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-transport-method-symbols/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... handler-symbols=transport-methods:5 ... final-ok=1`.
+- Confirmed all five MediaTransport method wrapper symbols compile, link, and are callable through the bridge ABI.
+- Confirmed the existing handler-call coverage remains intact: transport methods, transport properties, media methods, and media properties still all pass.
+
+Current boundary:
+
+- This is the first concrete replacement of a generic bridge stub with named wrapper symbols matching upstream handler families.
+- The wrappers still call compat bridge logic, not unmodified upstream `transport.c` handler bodies.
+- Next A2DP step should replace one named wrapper body, starting with `acquire` or `release`, with a wrapper around directly imported upstream handler semantics.
+
+## 2026-06-14 A2DP handler symbol surface closeout
+
+A2DP closeout advanced the dedicated Media/Transport bridge module from a presence map to a callable handler-symbol surface.  Each bridge entry in `bluez/upstream_media_transport_bridge.c` now carries a handler function pointer, and the hwsim gate validates that every mapped Media/Transport handler family is actually callable through the bridge ABI.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-handler-symbol-surface.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-handler-symbol-surface.log`
+- `FeatherCore/build/logs/run-a2dp-handler-symbol-surface.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-handler-symbol-surface/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... handler-calls=... symbols-callable:1 ... final-ok=1`.
+- Confirmed callable transport method symbols: acquire, try-acquire, release, select, and unselect.
+- Confirmed callable transport property symbols: getters, setters, and exists predicates.
+- Confirmed callable media method symbols: register/unregister endpoint, register/unregister player, and register/unregister application.
+- Confirmed callable media property symbols: supported UUIDs and supported features.
+
+Current boundary:
+
+- This narrows the replacement seam: bridge entries are no longer only named/present, they are callable through a uniform ABI.
+- The callable symbols are still compat bridge stubs, not direct unmodified upstream `media.c`/`transport.c` handlers.
+- Next A2DP step should replace the bridge stub for one handler family at a time with a wrapper around directly compiled/imported upstream logic.
+
+## 2026-06-14 A2DP handler bridge module closeout
+
+A2DP closeout moved the Media/Transport handler-family bridge out of the large `upstream_a2dp_compat.c` print/runner body into a dedicated replaceable ABI module.  The new `bluez/upstream_media_transport_bridge.c` and `bluez/upstream_media_transport_bridge.h` now own the handler bridge maps and expose `bluez_upstream_a2dp_handler_bridge_surface_run()` for the daemon compatibility path.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-handler-bridge-module.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-handler-bridge-module.log`
+- `FeatherCore/build/logs/run-a2dp-handler-bridge-module.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-handler-bridge-module/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both still emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... final-ok=1`.
+- Confirmed the new module is included by both `apps/wireless/linux_bluetooth/Makefile` and `apps/wireless/linux_bluetooth/CMakeLists.txt`.
+- Confirmed `upstream_a2dp_compat.c` now consumes the bridge through `upstream_media_transport_bridge.h` instead of owning the handler maps inline.
+
+Current boundary:
+
+- This is a structural step toward replacing staged dispatch: the handler-family bridge is now an isolated ABI seam that can be swapped for real upstream `media.c`/`transport.c` handler implementations.
+- It still does not directly link unmodified upstream handler bodies.
+- Next A2DP step should start replacing individual bridge entries inside `upstream_media_transport_bridge.c` with wrapper calls around directly compiled/imported upstream handler code.
+
+## 2026-06-14 A2DP handler bridge map refactor closeout
+
+A2DP closeout kept the same upstream handler-family coverage but refactored the Media/Transport handler bridge from hard-coded runner counters into explicit data-driven bridge maps in `bluez/upstream_a2dp_compat.c`.  This is a pre-replacement step: each bridge entry now names the upstream handler family that should later be replaced by a directly compiled/imported `media.c` or `transport.c` handler.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-handler-bridge-map.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-handler-bridge-map.log`
+- `FeatherCore/build/logs/run-a2dp-handler-bridge-map.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-handler-bridge-map/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both still emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... final-ok=1`.
+- Confirmed handler bridge maps now drive the transport method, transport property getter/setter/exists, media method, and media property getter counts.
+- Confirmed external hwsim contract did not change while the internal compat representation became easier to replace with real upstream handlers.
+
+Current boundary:
+
+- This reduces staged glue shape by collecting handler-family presence into explicit maps, instead of scattering counts through the runner body.
+- It still does not directly link unmodified upstream `media.c`/`transport.c` handlers.
+- Next A2DP step should start replacing individual bridge-map entries with real handler symbols or wrapper calls around directly compiled upstream handler code.
+
+## 2026-06-14 A2DP upstream handler bridge surface closeout
+
+A2DP closeout advanced from D-Bus table surface mirroring into an explicit upstream handler-family bridge surface for `third/bluez/profiles/audio/media.c` and `third/bluez/profiles/audio/transport.c`.  The NuttX sim BlueZ daemon path now validates that each mirrored MediaTransport/MediaEndpoint table entry has a corresponding handler family mapped before replacing staged dispatch with directly imported upstream handlers.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-handler-bridge-surface.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-handler-bridge-surface.log`
+- `FeatherCore/build/logs/run-a2dp-handler-bridge-surface.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-handler-bridge-surface/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-handler-bridge-surface-wrapper ... final-ok=1`.
+- Confirmed MediaTransport method handler families: acquire, try-acquire, release, select, and unselect.
+- Confirmed MediaTransport property getter families: device, uuid, codec, configuration, state, delay, volume, and endpoint.
+- Confirmed MediaTransport property setter/exists families: delay setter, volume setter, delay exists, volume exists, and endpoint exists.
+- Confirmed Media method handler families: register/unregister endpoint, register/unregister player, and register/unregister application.
+- Confirmed Media property getter families: supported UUIDs and supported features.
+
+Current boundary:
+
+- This is a stronger pre-replacement boundary than the earlier table-surface mirror: every upstream D-Bus table family now has an explicit handler-family mapping in the hwsim gate.
+- It is still a handler-family bridge in `bluez/upstream_a2dp_compat.c`, not direct linking of the unmodified upstream `media.c`/`transport.c` handlers.
+- Next A2DP step should begin replacing these mapped handler families with directly compiled/imported handler functions and route the staged D-Bus calls through those functions.
+
+## 2026-06-14 A2DP upstream D-Bus table surface closeout
+
+A2DP closeout advanced from MediaEndpoint/MediaTransport dispatch semantics into the upstream D-Bus table surface from `third/bluez/profiles/audio/media.c` and `third/bluez/profiles/audio/transport.c`.  The NuttX sim BlueZ daemon path now validates the method/property table shape needed before replacing staged dispatch with directly imported upstream method handlers.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-dbus-table-surface.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-dbus-table-surface.log`
+- `FeatherCore/build/logs/run-a2dp-dbus-table-surface.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-dbus-table-surface/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-dbus-table-surface-wrapper ... final-ok=1`.
+- Confirmed `transport_methods`: `Acquire`, `TryAcquire`, `Release`, `Select`, and `Unselect` are all represented as async methods.
+- Confirmed `transport_a2dp_properties`: `Device`, `UUID`, `Codec`, `Configuration`, `State`, `Delay`, `Volume`, and experimental `Endpoint`.
+- Confirmed writable/existing A2DP properties: `Delay` setter, `Volume` setter, and experimental `Endpoint` property flag.
+- Confirmed `media_methods`: `RegisterEndpoint`, `UnregisterEndpoint`, `RegisterPlayer`, `UnregisterPlayer`, `RegisterApplication`, and `UnregisterApplication`.
+- Confirmed `media_properties`: `SupportedUUIDs` and `SupportedFeatures`.
+- Confirmed transport ops surface: A2DP source/sink plus BAP unicast/broadcast ops are mirrored for profile table alignment.
+
+Current boundary:
+
+- This tightens the A2DP daemon/profile alignment by checking the actual upstream D-Bus table surface, including methods/properties previously not covered by the staged dispatch probes.
+- It is still a mirrored table-surface check in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `media.c`/`transport.c` tables registered directly in the daemon.
+- Next A2DP step should replace the mirrored surface with directly compiled/imported method tables and route hwsim D-Bus calls through those upstream handlers.
+
+## 2026-06-14 A2DP upstream MediaEndpoint D-Bus closeout
+
+A2DP closeout advanced from MediaTransport method dispatch into the Media endpoint registration/configuration surface used by upstream `third/bluez/profiles/audio/media.c`.  The NuttX sim BlueZ daemon path now validates a staged dispatch slice for `org.bluez.Media1` and `org.bluez.MediaEndpoint1`, covering endpoint registration, property parsing, SEP creation, async Select/SetConfiguration, ClearConfiguration, Release, unregister, and cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-media-endpoint-dbus.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-media-endpoint-dbus.log`
+- `FeatherCore/build/logs/run-a2dp-media-endpoint-dbus.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-media-endpoint-dbus/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-media-endpoint-dbus-wrapper ... final-ok=1`.
+- Confirmed endpoint registration surface: `RegisterEndpoint`, `UnregisterEndpoint`, UUID/codec/capability/delay-reporting parsing, duplicate rejection, invalid UUID rejection, and invalid capability rejection.
+- Confirmed SEP binding: source SEP creation, sink SEP creation, and SEP removal.
+- Confirmed endpoint method flow: `SelectConfiguration`, `SetConfiguration`, `ClearConfiguration`, `Release`, async request creation, pending call tracking, success reply, error reply, and request cancellation.
+- Confirmed transport binding: SetConfiguration creates/appends a transport, ClearConfiguration clears/destroys it.
+- Confirmed cleanup: endpoint remove, endpoint destroy, owner watch remove, custom property remove, and pending endpoints/requests/transports/watches all return to zero.
+
+Current boundary:
+
+- This moves A2DP above MediaTransport D-Bus dispatch into the Media1/MediaEndpoint1 profile registration contract used by real BlueZ audio clients.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `media.c` method handlers and mainloop dispatch linked end-to-end.
+- Next A2DP step should progressively replace this staged endpoint dispatch slice with directly compiled/imported `media.c` handlers and route real D-Bus calls through the daemon path.
+
+## 2026-06-14 A2DP upstream MediaTransport D-Bus dispatch closeout
+
+A2DP closeout advanced from MediaTransport ownership into the daemon D-Bus method surface used by upstream `third/bluez/profiles/audio/transport.c`.  The NuttX sim BlueZ daemon path now validates a staged dispatch slice for `org.bluez.MediaTransport1` covering `Acquire`, `TryAcquire`, `Release`, property get/set, success replies, state guards, error replies, request lifecycle, and owner watch cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-media-transport-dbus.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-media-transport-dbus.log`
+- `FeatherCore/build/logs/run-a2dp-media-transport-dbus.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-media-transport-dbus/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-media-transport-dbus-wrapper ... final-ok=1`.
+- Confirmed D-Bus method surface: `Acquire`, `TryAcquire`, and `Release` are represented with success and guarded failure paths.
+- Confirmed successful client flow: fd/imtu/omtu reply, request completion, state transitions through idle/requesting/active/suspending/idle, and owner watch add/remove.
+- Confirmed error flow: owner conflict, not available, not authorized, invalid args, and unsupported property/method behavior.
+- Confirmed property flow: get properties, set volume, set delay, volume changed signal, and delay changed signal.
+- Confirmed cleanup: pending owners, requests, fds, and watches all return to zero.
+
+Current boundary:
+
+- This moves A2DP above MediaTransport object ownership into the real D-Bus method contract that BlueZ clients use for audio transport acquisition and release.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `transport.c` method table and mainloop dispatch linked end-to-end.
+- Next A2DP step should replace this staged D-Bus dispatch slice with directly compiled/imported `transport.c` method handlers and then bind real daemon mainloop ownership to the hwsim AVDTP path.
+
+## 2026-06-14 A2DP upstream MediaTransport ownership closeout
+
+A2DP closeout advanced from AVDTP Close/Abort teardown into BlueZ daemon-side MediaEndpoint/MediaTransport ownership semantics from upstream `third/bluez/profiles/audio/media.c` and `third/bluez/profiles/audio/transport.c`.  The NuttX sim BlueZ daemon path now validates a staged ownership slice covering `org.bluez.MediaEndpoint1`, `org.bluez.MediaTransport1`, transport creation, owner/watch lifecycle, Acquire/Release, A2DP resume/suspend binding, properties, and destroy/unregister cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-media-transport-ownership.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-media-transport-ownership.log`
+- `FeatherCore/build/logs/run-a2dp-media-transport-ownership.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-media-transport-ownership/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-media-transport-ownership-wrapper ... final-ok=1`.
+- Confirmed MediaEndpoint/MediaTransport object lifecycle: endpoint registration/find, transport create/path allocation, A2DP ops lookup/init, configuration copy, D-Bus register, global transport append, endpoint transport append, and property export.
+- Confirmed owner lifecycle: owner creation, disconnect watch add, owner set/remove, pending request removal, clear owner, and final owner/watch zero.
+- Confirmed Acquire path: request, `TRANSPORT_STATE_REQUESTING`, `transport_a2dp_resume`, fd ready, fd/imtu/omtu reply, and `TRANSPORT_STATE_ACTIVE`.
+- Confirmed Release/cancel path: Release request, `transport_a2dp_suspend`, `TRANSPORT_STATE_SUSPENDING`, `TRANSPORT_STATE_IDLE`, cancel-resume, and `a2dp_cancel`.
+- Confirmed properties and cleanup: delay update/emit, volume get/set/emit, clear configuration, endpoint remove transport, cancel all, transport destroy, D-Bus unregister, transport free, and final pending transports zero.
+
+Current boundary:
+
+- This moves A2DP above AVDTP transaction probes into daemon-side MediaTransport ownership semantics required by real BlueZ clients using `Acquire` and `Release`.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `media.c`/`transport.c` object body linked end-to-end.
+- Next A2DP step should progressively replace this staged ownership slice with directly compiled/imported `media.c`/`transport.c` code paths and real daemon mainloop/D-Bus method dispatch.
+
+## 2026-06-14 A2DP upstream Close/Abort transaction closeout
+
+A2DP closeout advanced from Start/Suspend lifecycle into the Close/Abort and cancellation paths used by upstream `third/bluez/profiles/audio/a2dp.c`.  The NuttX sim BlueZ daemon path now validates the staged transaction flow around `close_ind`, `close_cfm`, `abort_ind`, `abort_cfm`, `a2dp_cancel`, and `a2dp_reconfigure`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-close-abort-transaction.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-close-abort-transaction.log`
+- `FeatherCore/build/logs/run-a2dp-close-abort-transaction.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-close-abort-transaction/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-close-abort-transaction-wrapper ... final-ok=1`.
+- Confirmed Close paths: Close_Ind unwinds pending suspend/resume with `-ECONNRESET`, Close_Cfm success resolves remote SEP and schedules reconfigure, and Close_Cfm error clears stream and finalizes config.
+- Confirmed Abort paths: Abort_Ind destroys the stream and unwinds suspend/resume/config callbacks, Abort_Cfm either schedules reconfigure or unreferences setup.
+- Confirmed cancellation path: `a2dp_cancel` lookup, setup ref, callback free, AVDTP Abort, and return-after-abort are covered.
+- Confirmed cleanup: setup callback free reaches six calls, setup unref reaches four calls, and pending callbacks, setups, streams, and transactions return to zero.
+
+Current boundary:
+
+- This moves A2DP beyond media Start/Suspend into executable Close/Abort/reconfigure/cancel lifecycle semantics required for teardown and error recovery.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning real BlueZ objects end-to-end.
+- Next A2DP step should reduce staged ownership around real upstream setup/session/stream structs, then bind these transaction slices to daemon/mainloop/D-Bus MediaTransport ownership.
+
+## 2026-06-14 A2DP upstream Start/Suspend transaction closeout
+
+A2DP closeout advanced from finalizer/callback ABI into the Start/Suspend transaction lifecycle used by upstream `third/bluez/profiles/audio/a2dp.c`.  The NuttX sim BlueZ daemon path now validates the staged transaction flow around `a2dp_resume`, `a2dp_suspend`, `start_ind`, `start_cfm`, `suspend_ind`, and `suspend_cfm`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-start-suspend-transaction.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-start-suspend-transaction.log`
+- `FeatherCore/build/logs/run-a2dp-start-suspend-transaction.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-start-suspend-transaction/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-start-suspend-transaction-wrapper ... final-ok=1`.
+- Confirmed resume paths: CONFIGURED defers start until Start_Ind, OPEN issues AVDTP Start and finalizes on Start_Cfm, STREAMING finalizes immediately, and suspend-in-progress defers resume until suspend completion.
+- Confirmed suspend paths: OPEN finalizes immediately, STREAMING issues AVDTP Suspend, Suspend_Ind and Suspend_Cfm both finalize suspend callbacks, and restart-after-suspend is covered.
+- Confirmed failure paths: resume bad state, suspend bad state, reconfigure reject, AVDTP Start failure, AVDTP Suspend failure, and restart-after-suspend failure.
+- Confirmed cleanup: setup callback free and setup unref both reach fifteen calls, with pending callbacks, pending setups, and pending transactions returning to zero.
+
+Current boundary:
+
+- This moves A2DP beyond callback ABI into executable Start/Suspend transaction lifecycle semantics required for media start, suspend, restart, and error unwind.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning real BlueZ objects end-to-end.
+- Next A2DP step should reduce staged ownership around actual upstream setup/session/stream structures and then attach the daemon/mainloop/D-Bus ownership path more directly to these transaction slices.
+
+## 2026-06-14 A2DP upstream finalizer/callback ABI closeout
+
+A2DP closeout advanced from SetConfiguration transaction lifecycle into the callback/finalizer ABI used by upstream `third/bluez/profiles/audio/a2dp.c`.  The NuttX sim BlueZ daemon path now validates callable slices using the real upstream callback typedefs `a2dp_config_cb_t` and `a2dp_stream_cb_t`, including success delivery, error delivery, finalizer routing, errno propagation, and cleanup accounting.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-finalizer-callback-v3.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-finalizer-callback-v3.log`
+- `FeatherCore/build/logs/run-a2dp-finalizer-callback-v3.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-finalizer-callback-v3/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-finalizer-callback-wrapper ... final-ok=1`.
+- Confirmed callback dispatch through `a2dp_config_cb_t` and `a2dp_stream_cb_t` for config, resume, and suspend paths.
+- Confirmed finalizer routing: `finalize_config`, `finalize_resume`, `finalize_suspend`, and `finalize_setup_errno`.
+- Confirmed success/error delivery: config success/error, resume success/error, suspend success/error, plus stream pointer delivery.
+- Confirmed error propagation: `-EIO` and `-EINVAL` paths are counted and delivered to the expected callback families.
+- Confirmed cleanup: setup callback free and setup unref both reach six calls, with pending callbacks and pending setups returning to zero.
+
+Current boundary:
+
+- This moves A2DP beyond transaction counters into executable callback/finalizer ABI semantics needed by the upstream audio plugin lifecycle.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning real BlueZ objects end-to-end.
+- Next A2DP step should connect these callable slices more directly to imported upstream setup/session/stream object ownership, reducing the remaining staged glue around finalizer dispatch.
+
+## 2026-06-14 A2DP upstream SetConfiguration transaction closeout
+
+A2DP closeout advanced from state-policy decisions into SetConfiguration transaction lifecycle semantics.  The NuttX sim BlueZ daemon path now validates the staged transaction flow corresponding to `third/bluez/profiles/audio/a2dp.c` `a2dp_config`, `set_configuration`, configuration confirmation, and `finalize_config` cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-setconf-transaction.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-setconf-transaction.log`
+- `FeatherCore/build/logs/run-a2dp-setconf-transaction.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-setconf-transaction/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-setconf-transaction-wrapper ... final-ok=1`.
+- Confirmed normal transaction lifecycle: setup get, setup callback add, caps copy, remote SEP resolution, AVDTP SetConfiguration, stream assignment, SetConfiguration confirmation, config callback, and finalize.
+- Confirmed same-caps path: idle finalize without a new SetConfiguration transaction.
+- Confirmed reconfigure path: different caps close the existing stream, set reconfigure flag, retry, then complete SetConfiguration.
+- Confirmed failure paths: no remote SEP and AVDTP SetConfiguration failure both cleanup setup callbacks and setup refs.
+- Confirmed final cleanup: pending callbacks, pending setups, and pending transactions all zero.
+
+Current boundary:
+
+- This moves A2DP beyond state-policy tables into executable transaction lifecycle semantics required by SetConfiguration and reconfigure paths.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning real BlueZ objects end-to-end.
+- Next A2DP step should connect these transaction slices to imported upstream setup/session/stream object code, reducing staged counters around setup callbacks and finalizers.
+
+## 2026-06-14 A2DP upstream SetConfiguration/state policy closeout
+
+A2DP closeout advanced from SEP matching into upstream-style SetConfiguration/session state policy.  The NuttX sim BlueZ daemon path now validates the key state decisions used by `third/bluez/profiles/audio/a2dp.c` around `a2dp_config`, `a2dp_resume`, and `a2dp_suspend`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-state-policy.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-state-policy.log`
+- `FeatherCore/build/logs/run-a2dp-state-policy.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-state-policy/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-state-policy-wrapper ... final-ok=1`.
+- Confirmed `a2dp_config` policy: IDLE allows SetConfiguration, OPEN/STREAMING with same caps finalize, OPEN/STREAMING with different caps reconfigure, CONFIGURED/CLOSING/ABORTING reject, locked stream rejects, missing codec rejects, and codec mismatch rejects.
+- Confirmed `a2dp_resume` policy: IDLE rejects, CONFIGURED defers start, OPEN starts, STREAMING finalizes, CLOSING/ABORTING reject, and active reconfigure rejects.
+- Confirmed `a2dp_suspend` policy: IDLE rejects, OPEN finalizes, STREAMING suspends, CONFIGURED/CLOSING/ABORTING reject, and active reconfigure rejects.
+
+Current boundary:
+
+- This moves A2DP beyond codec/SEP matching into executable session state policy required for SetConfiguration, Start, Suspend, and reconfigure decisions.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning real BlueZ objects end-to-end.
+- Next A2DP step should connect these policy slices to more imported upstream object code, reducing staged wrappers around setup/session/stream state transitions.
+
+## 2026-06-14 A2DP upstream SEP matching closeout
+
+A2DP closeout advanced from SBC codec/config selection into upstream-style SEP matching semantics.  The NuttX sim BlueZ daemon path now validates the key matching rules used around `third/bluez/profiles/audio/a2dp.c` `find_sep`, `find_remote_sep`, and `SetConfiguration`: remote SEP direction maps to the opposite local SEP role, MediaEndpoint sender/path must match, codec must match, and invalid combinations are rejected.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-sep-matching.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-sep-matching.log`
+- `FeatherCore/build/logs/run-a2dp-sep-matching.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-sep-matching/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-sep-matching-wrapper ... final-ok=1`.
+- Confirmed role matching: `remote-source->local-sink=1`, `remote-sink->local-source=1`.
+- Confirmed endpoint matching: `sender-path-match=1`.
+- Confirmed codec matching: `codec-match=1` for SBC.
+- Confirmed rejection paths: wrong sender, wrong path, codec mismatch, missing remote codec, and missing local SEP are all rejected.
+
+Current boundary:
+
+- This moves A2DP beyond codec payload/config selection into executable endpoint/SEP compatibility semantics required before AVDTP SetConfiguration.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` object body owning the full DBus/AVDTP runtime.
+- Next A2DP step should continue with SetConfiguration/session state policy, then progressively replace staged helpers with imported upstream BlueZ objects.
+
+## 2026-06-14 A2DP upstream SBC config selector closeout
+
+A2DP closeout advanced from public error mapping into codec/config negotiation semantics.  The NuttX sim BlueZ daemon path now compiles and validates an upstream-style SBC capability selector using `third/bluez/profiles/audio/a2dp-codecs.h` definitions and A2DP protocol error codes.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-sbc-config-selector-v2.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-sbc-config-selector-v2.log`
+- `FeatherCore/build/logs/run-a2dp-sbc-config-selector-v2.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-sbc-config-selector-v2/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-sbc-config-selector ... final-ok=1`.
+- Confirmed selected SBC config from remote capabilities: `frequency=48000`, `channel=joint-stereo`, `block=16`, `subbands=8`, `alloc=loudness`, `min-bitpool=2`, `max-bitpool=51`.
+- Confirmed remote capability input: `frequency=48000+44100`, `channel=joint-stereo+stereo`, `block=16+12`, `subbands=8+4`, `alloc=loudness+snr`, `min-bitpool=2`, `max-bitpool=250`.
+- Confirmed error policy: no frequency -> `0xc4`, no channel -> `0xc6`, no block -> `0xdd`, no subbands -> `0xc8`, no allocation -> `0xca`, bad min bitpool -> `0xcb`, bad max bitpool -> `0xcd`, null input -> `0x29`.
+
+Current boundary:
+
+- This moves A2DP beyond media payload probing into executable codec negotiation semantics required by AVDTP SetConfiguration.
+- It is still a staged callable slice in `bluez/upstream_a2dp_compat.c`, not the unmodified upstream `a2dp.c` body owning the full endpoint selection path.
+- Next A2DP step should continue replacing staged selection and SEP matching helpers with callable upstream slices until the daemon path can rely on imported BlueZ objects rather than compatibility probes.
+
+## 2026-06-14 A2DP upstream config-error parser closeout
+
+A2DP closeout advanced from staged ownership evidence into a callable upstream public-function slice from `third/bluez/profiles/audio/a2dp.c`: `a2dp_parse_config_error()`.  The NuttX sim BlueZ daemon path now compiles and validates the BlueZ A2DP D-Bus error-name to protocol error-code mapping used by MediaEndpoint configuration failure handling.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-config-error-parser.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-config-error-parser.log`
+- `FeatherCore/build/logs/run-a2dp-config-error-parser.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-config-error-parser/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-config-error-parser ... final-ok=1`.
+- Confirmed mapped BlueZ errors: `InvalidCodecType=0xc1`, `NotSupportedCodecType=0xc2`, `InvalidSamplingFrequency=0xc3`, `InvalidChannelMode=0xc5`, `InvalidMaximumBitpoolValue=0xcd`, `InvalidCodecParameter=0xe2`.
+- Confirmed fallback behavior: wrong prefix, unknown suffix, and null input all map to `AVDTP_UNSUPPORTED_CONFIGURATION=0x29`.
+- Confirmed upstream table size in the ported slice: `entries=35`.
+
+Current boundary:
+
+- This is a real public A2DP function slice ported into the NuttX BlueZ compat build and required by hwsim validation.
+- It is still not the unmodified upstream `a2dp.c` object body owning the whole daemon path.
+- Next A2DP step should continue replacing staged helpers with callable upstream slices around config selection, SEP matching, and stream state transition policy.
+
+## 2026-06-14 A2DP upstream AVDTP session/stream ownership closeout
+
+A2DP closeout advanced again from upstream `a2dp.c` setup ownership into a staged ownership model for `third/bluez/profiles/audio/avdtp.c`.  The NuttX sim BlueZ daemon path now emits and validates source/sink lifecycle evidence for AVDTP session, local SEP, remote SEP, discovery callback, pending request, stream, stream callback, transport attach/get/clear, pending-open ownership, state transitions, and final cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-avdtp-owner.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-avdtp-owner.log`
+- `FeatherCore/build/logs/run-a2dp-avdtp-owner.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-avdtp-owner/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-avdtp-ownership-wrapper ... final-ok=1`.
+- Confirmed object lifecycle: `session:1`, `local-sep:1`, `remote-sep:1`, `discover:1`, `request:1`, `stream:1`, `stream-cb:1`.
+- Confirmed state lifecycle: `configured:1`, `open:1`, `streaming:1`, `idle:1`.
+- Confirmed transport lifecycle: `set:1`, `get:1`, `clear:1`, `pending-open-set:1`, `pending-open-clear:1`.
+- Confirmed cleanup and leak closure: `discover_free:1`, `remote-sep-unregister:1`, `stream-cb-remove:1`, `stream_free:1`, `session_free:1`, `final-zero=sessions:0,local-seps:0,remote-seps:0,streams:0,discovers:0,requests:0,stream-cbs:0,transports:0,refs:0`.
+
+Current boundary:
+
+- A2DP staged convergence now validates upstream source manifest, public A2DP/AVDTP headers, endpoint callbacks, AVDTP cfm/ind callbacks, `a2dp.c` ownership model, and `avdtp.c` ownership model.
+- It is still not an unmodified upstream `bluetoothd` audio plugin with native `a2dp.c` and `avdtp.c` bodies owning the whole runtime.
+- Next A2DP step should replace staged ownership probes with progressively larger callable slices from upstream `a2dp.c`/`avdtp.c`, while preserving these hwsim source/sink contracts.
+
+## 2026-06-14 A2DP upstream setup/SEP/stream ownership closeout
+
+A2DP closeout advanced from callback-surface compatibility into a staged ownership model for the upstream `third/bluez/profiles/audio/a2dp.c` object lifecycle.  The NuttX sim BlueZ daemon path now emits and validates a source/sink ownership wrapper for the same core object families used by upstream BlueZ: server, channel, setup, setup callback, SEP, stream, endpoint queues, transport attach/detach, callback completion, and final cleanup.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-setup-owner.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-setup-owner.log`
+- `FeatherCore/build/logs/run-a2dp-setup-owner.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-setup-owner/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-setup-ownership-wrapper ... final-ok=1`.
+- Confirmed object lifecycle: `server:1`, `channel:1`, `setup:1`, `setup_cb:4`, `sep:1`, `stream:1`.
+- Confirmed callback lifecycle: `discover:1`, `select:1`, `config:1`, `resume:1`, `suspend:1`.
+- Confirmed transport lifecycle: `attach:1`, `detach:1`.
+- Confirmed cleanup and leak closure: `setup_free:1`, `setup_cb_free:4`, `sep_remove:1`, `stream_destroy:1`, `final-zero=setups:0,seps:0,streams:0,cbs:0,refs:0`.
+
+Current boundary:
+
+- This is a staged `a2dp.c` ownership model compiled and driven through the sim daemon, with validator-enforced source/sink evidence.
+- It is still not the unmodified upstream `a2dp.c` object body owning the real BlueZ daemon path.
+- Next A2DP step should replace the staged ownership probe with progressively larger callable slices from upstream `a2dp.c`, then do the same for `avdtp.c` session/object ownership.
+
+## 2026-06-14 A2DP upstream AVDTP callback wrapper closeout
+
+A2DP closeout advanced one layer beyond the upstream source manifest and `struct a2dp_endpoint` callback wrapper: the NuttX sim BlueZ daemon path now compiles, instantiates, and executes the upstream public `struct avdtp_sep_cfm` and `struct avdtp_sep_ind` callback tables from `bluez/upstream/profiles/audio/avdtp.h` through `bluez/upstream_a2dp_compat.c`.
+
+Verification artifacts:
+
+- `FeatherCore/build/logs/build-bt1-a2dp-avdtp-callback.log`
+- `FeatherCore/build/logs/build-bt2-a2dp-avdtp-callback.log`
+- `FeatherCore/build/logs/run-a2dp-avdtp-callback.log`
+- `FeatherCore/build/bt-hwsim-usecases-a2dp-avdtp-callback/run-results.json`
+
+Validated hwsim case:
+
+- `bluez-a2dp-upstream-convergence-closeout`: PASS for bt1/source and bt2/sink.
+- Source and sink both emit `bluez-daemon: a2dp upstream-avdtp-callback-wrapper ... final-ok=1`.
+- Confirmed cfm callbacks: `set_configuration`, `get_configuration`, `open`, `start`, `suspend`, `close`, `abort`, `reconfigure`, `delay_report`.
+- Confirmed ind callbacks: `match_codec`, `get_capability`, `set_configuration`, `set_configuration_cb`, `get_configuration`, `open`, `start`, `suspend`, `close`, `abort`, `reconfigure`, `delayreport`.
+- Existing A2DP closeout still completes full staged media transport, RTP/SBC payload simulation, AVRCP event path, and ownership cleanup.
+
+Current boundary:
+
+- This closes the AVDTP public callback surface alignment for the staged A2DP daemon path.
+- It is still not an unmodified upstream `bluetoothd` audio plugin running its native `a2dp.c`/`avdtp.c` object ownership and mainloop end-to-end.
+- Next A2DP step should move actual upstream `a2dp.c` setup/session/SEP ownership into the compatibility layer first, then converge `avdtp.c` session/object ownership.
+
+## 2026-06-14 A2DP upstream endpoint callback wrapper closeout
+
+继续 A2DP 去 staged adapter 化，本轮在 upstream header compat wrapper 之后，把 upstream `struct a2dp_endpoint` callback surface 实例化并纳入 hwsim gate。
+
+A2DP upstream convergence + endpoint callback wrapper：PASS
+
+- case: `bluez-a2dp-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-a2dp-endpoint-callback.log`
+- build: `FeatherCore/build/logs/build-bt2-a2dp-endpoint-callback.log`
+- run: `FeatherCore/build/logs/run-a2dp-endpoint-callback.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-a2dp-endpoint-callback/run-results.json`
+- roles: `bt1` source, `bt2` sink
+
+实现改动：`FeatherCore/apps/wireless/linux_bluetooth/bluez/upstream_a2dp_compat.c` 现在构造真实 upstream public `struct a2dp_endpoint` callback table，并执行 `get_name`、`get_path`、`get_capabilities`、`select_configuration`、`set_configuration`、`clear_configuration`、`set_delay`。`select_configuration` 和 `set_configuration` 分别通过 upstream 类型 `a2dp_endpoint_select_t`、`a2dp_endpoint_config_t` 回调闭环。
+
+新增验证门槛：validator 现在要求 source/sink 两端输出 `bluez-daemon: a2dp upstream-endpoint-callback-wrapper`，并检查 `callbacks=get_name:1,get_path:1,get_capabilities:1,select_configuration:1,select_cb:1,set_configuration:1,set_cb:1,clear_configuration:1,set_delay:1`、`capability-bytes=12`、`selected-bytes=12`、`delay=120`、`final-ok=1`。
+
+当前含义：A2DP upstream-facing 层已从“public headers 可编译”推进到 “public endpoint callback table 可执行”。边界仍明确为 `boundary=upstream-a2dp-endpoint-callbacks-compiled-not-yet-a2dp-c-object` 和 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`；下一步继续把 upstream `a2dp.c` 中的 setup/session/SEP owner 逐步拆入 compat wrapper，最终替换当前 `bluezdaemon` staged A2DP object/session owner。
+
+## 2026-06-14 A2DP upstream header compat wrapper closeout
+
+继续 A2DP 去 staged adapter 化，本轮在 upstream source manifest 之后新增可编译的 upstream-facing A2DP compat wrapper。
+
+A2DP upstream convergence + header compat wrapper：PASS
+
+- case: `bluez-a2dp-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-a2dp-upstream-compat-v2.log`
+- build: `FeatherCore/build/logs/build-bt2-a2dp-upstream-compat-v2.log`
+- run: `FeatherCore/build/logs/run-a2dp-upstream-compat-v2.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-compat-v2/run-results.json`
+- roles: `bt1` source, `bt2` sink
+
+实现改动：新增 `FeatherCore/apps/wireless/linux_bluetooth/bluez/upstream_a2dp_compat.c` 和 `upstream_a2dp_compat.h`，并接入 `CONFIG_LINUX_BLUEZ_DAEMON` 的 Makefile/CMake 构建。该编译单元直接 include `bluez/upstream/profiles/audio/a2dp.h` 和 `bluez/upstream/profiles/audio/avdtp.h`，为 NuttX apps 侧补齐最小 GLib/BlueZ 前置类型 `gboolean`、`GSList`、`GIOChannel`、`GDestroyNotify`、`btd_adapter`、`btd_device`、`queue`。
+
+新增验证门槛：validator 现在要求 source/sink 两端输出 `bluez-daemon: a2dp upstream-compat-wrapper`，并检查 upstream header 里的 callback surface、状态常量、SEP 类型、capability 类型和 error code：`a2dp_endpoint_select_t`、`a2dp_endpoint_config_t`、`a2dp_discover_cb_t`、`a2dp_select_cb_t`、`a2dp_config_cb_t`、`a2dp_stream_cb_t`、`avdtp_session_state_cb`、`avdtp_stream_state_cb`、`avdtp_set_configuration_cb`，以及 `AVDTP_STATE_IDLE/CONFIGURED/OPEN/STREAMING/CLOSING/ABORTING`、`AVDTP_SEP_TYPE_SOURCE/SINK`、`AVDTP_MEDIA_TRANSPORT`、`AVDTP_MEDIA_CODEC`、`AVDTP_DELAY_REPORTING`、`AVDTP_BAD_STATE`、`A2DP_INVALID_CODEC_TYPE`、`A2DP_NOT_SUPPORTED_CODEC_TYPE`、`A2DP_INVALID_CODEC_PARAMETER`。
+
+当前含义：A2DP gate 已从 source mirror/manifest 继续推进到直接编译 upstream A2DP/AVDTP public headers，证明 NuttX apps 侧已有可编译的 upstream-facing callback/type/constant 兼容层。边界仍明确为 `boundary=upstream-headers-compiled-not-yet-upstream-c-object` 和 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`；下一步应继续把 `a2dp.c`/`avdtp.c` 的实际 `.c` 对象逐步拆出可编译 compat wrapper，并让真实 callback/session owner 接管更多路径。
+
+## 2026-06-14 A2DP upstream source manifest closeout
+
+继续 A2DP 去 staged adapter 化，本轮确认 `FeatherCore/apps/wireless/linux_bluetooth/bluez/upstream` 是指向 `third/bluez` 的符号链接，并把 A2DP upstream source manifest 编译进 `bluezdaemon`。
+
+A2DP upstream convergence + source manifest：PASS
+
+- case: `bluez-a2dp-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-a2dp-upstream-manifest.log`
+- build: `FeatherCore/build/logs/build-bt2-a2dp-upstream-manifest.log`
+- run: `FeatherCore/build/logs/run-a2dp-upstream-manifest.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-manifest/run-results.json`
+- roles: `bt1` source, `bt2` sink
+
+实现改动：新增 `FeatherCore/apps/wireless/linux_bluetooth/bluez/upstream_manifest.c` 和 `upstream_manifest.h`，并接入 `CONFIG_LINUX_BLUEZ_DAEMON` 的 Makefile/CMake 构建。`bluezdaemon audio-a2dp-closeout-full` 现在会输出 `bluez-daemon: a2dp upstream-source-manifest`，validator 强制检查 source/sink 两端都看到 `apps-link=bluez/upstream target=third/bluez audio-files=20 core-files=9 compile-unit=bluez/upstream_manifest.c`。
+
+manifest 覆盖的 upstream A2DP/audio 文件包括 `a2dp.c`、`a2dp.h`、`a2dp-codecs.h`、`avdtp.c`、`avdtp.h`、`avctp.c`、`avctp.h`、`avrcp.c`、`avrcp.h`、`avrcp-player.c`、`media.c`、`media.h`、`transport.c`、`transport.h`、`source.c`、`source.h`、`sink.c`、`sink.h`、`player.c`、`player.h`。core 文件包括 `src/main.c`、`src/plugin.c`、`src/profile.c`、`src/device.c`、`src/adapter.c`、`src/dbus-common.c`、`src/sdpd-service.c`、`src/shared/mainloop.c`、`src/shared/io-mainloop.c`。
+
+当前含义：A2DP gate 不再只依赖 `daemon_main.c` 中的 source 字符串，而是要求 `bluezdaemon` 的编译单元显式绑定 apps 侧 upstream BlueZ source mirror。边界仍明确为 `boundary=source-mirror-not-yet-unmodified-plugin` 和 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`，因此还不能宣称 unmodified upstream `bluetoothd` audio plugin 已直接运行。下一步继续把 manifest 中的 upstream audio plugin 入口逐步从 source mirror/ledger 推进到可编译 compat wrapper 和真实 callback/session owner。
+
+## 2026-06-14 A2DP upstream daemon ownership ledger closeout
+
+在 BT/BLE NET iperf matrix 收口之后，本轮回到 A2DP，继续把 `bluez-a2dp-upstream-convergence-closeout` 从“子路径覆盖”加严到 “daemon ownership 总账”覆盖。
+
+A2DP upstream convergence + ownership ledger：PASS
+
+- case: `bluez-a2dp-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-a2dp-ownership-ledger.log`
+- build: `FeatherCore/build/logs/build-bt2-a2dp-ownership-ledger.log`
+- run: `FeatherCore/build/logs/run-a2dp-ownership-ledger.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-a2dp-ownership-ledger/run-results.json`
+- roles: `bt1` source, `bt2` sink
+
+新增验证门槛：`bluezdaemon audio-a2dp-closeout-full` 现在输出并由 validator 强制检查 `bluez-daemon: a2dp closeout upstream-daemon-ownership-ledger`。该 ledger 覆盖 `profile,device,session,stream,media-transport,avrcp-player,l2cap-fd,dbus-name,mainloop-watch` 的 bluetoothd direct owner，并要求两端同时满足：`profile-register=1/profile-unregister=1`、`device-connect=2/device-disconnect=2`、`dbus-name-acquire=1/dbus-name-release=1`、`dbus-owner-lost=1/dbus-owner-reacquire=1`、`mainloop-watch-add=7/mainloop-watch-remove=7`、`mainloop-timer-add=2/mainloop-timer-remove=2`、`avdtp-transactions=12/avdtp-complete=12`、`transport-acquire=2/transport-release=2`、`fd-open=2/fd-close=2`、`zero-ref-rounds=2/rounds=2`，最终 `final-profile-registered=0`、`final-device-ref=0`、`final-session-ref=0`、`final-stream-ref=0`、`final-sep-ref=0`、`final-endpoint-refs=0`、`final-transport-refs=0`、`final-player-refs=0`、`final-dbus-owners=0`、`final-interfaces=0`、`final-mainloop-watches=0`、`final-mainloop-timers=0`、`final-l2cap-fds=0`、`final-media-fd=closed`、`final-transaction-pending=0`、`final-state-errors=0`、`final-ok=1`。
+
+实现改动：`FeatherCore/apps/wireless/linux_bluetooth/bluez/tools/daemon_main.c` 增加 A2DP upstream daemon ownership ledger 计算和输出；`FeatherCore/tools/firmware/sim/validate-bt-hwsim-usecases.py` 对 `bluez-a2dp-upstream-convergence-closeout` 加严，要求 source/sink 两端都出现 ledger 并满足最终归零条件。
+
+边界仍保留：ledger 仍标记 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`。因此当前结论是：A2DP 的 daemon/mainloop/D-Bus/object/fd/ref 生命周期审计更强了，但还不能宣称 unmodified upstream `bluetoothd` audio plugin 已完全无 adapter 运行。下一步继续 A2DP 去 staged adapter 化，优先让 upstream `bluetoothd` audio plugin 入口直接拥有 mainloop、D-Bus object、MediaTransport fd 和 AVDTP/L2CAP session。
+
+## 2026-06-14 BT/BLE NET iperf matrix closeout
+
+在 LE Audio full-role、BT/BLE basic、A2DP upstream convergence、BT/BLE NET current closeout 之后，本轮继续补跑并收口 BT Network/BNEP 的 iperf matrix。
+
+BT Network/BNEP iperf matrix：PASS
+
+- case: `bluez-network-iperf-matrix`
+- build: `FeatherCore/build/logs/build-bt1-bluez-network-iperf-matrix-final-v3.log`
+- build: `FeatherCore/build/logs/build-bt2-bluez-network-iperf-matrix-final-v3.log`
+- run: `FeatherCore/build/logs/run-bluez-network-iperf-matrix-final-v3.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-bluez-network-iperf-matrix-final-v3/run-results.json`
+- roles: `bt1`, `bt2`
+
+验证结果：`run-results.json` 显示 `passed=true`、`validate_rc=0`，runner 输出 `PASS bluez-network-iperf-matrix`。BT1/BT2 均完成 BlueZ Network Profile-shaped BNEP/PAN 多轮 TCP/UDP 正反向 iperf，日志中出现非零吞吐，例如约 `0.35` 到 `0.69 Mbits/sec`，并在 native BNEP path 中看到 `bnep-native-sock-ioctl-connadd=4`、`bnep-native-kthread-run=4`、`bnep-native-session-rx-dequeue`、`bnep-native-ndo-start-xmit`、`bnep-native-l2cap-delivered`、`bnep-native-netif-rx` 等非零计数。最终 cleanup 看到 `bnep-native-active=0`、`bnep-native-session-stop=4`、`bnep-native-session-terminate=4`、`bnep-native-netdev-unregister=4`。
+
+实现补充：`linux_bt_upstream_af_status()` 将 `bnep-native-sock-ioctl-connadd/conndel` 提前输出到 BNEP socket ioctl 摘要段，避免长状态行后部被截断导致验证器看不到已经发生的 native BNEP ioctl 证据。该改动不降低验证门槛，只修正证据可见性。
+
+当前阶段结论：LE Audio 当前全角色 gate、BT/BLE basic gate、A2DP upstream convergence gate、BT/BLE NET current closeout、BLE IP ping、BT Network/BNEP iperf matrix 均已通过。下一阶段按用户指定顺序继续补 A2DP 的更深 upstream daemon/mainloop/D-Bus ownership，再补 BT/BLE NET 的 unmodified upstream plugin 收敛，最后补剩余全部 BT/BLE profiles/security/policy。仍保留 staged adapter 边界，不声明整套 upstream Linux/BlueZ 蓝牙栈已经完全无 adapter 移植完。
+
+## 2026-06-14 BT/BLE NET current closeout: BLE IP ping + BlueZ Network/IPSP
+
+本轮进入 BT/BLE NET 阶段，优先验证目标清单里原先标记未完成的 BLE1 <-> BLE2 IP ping，然后运行当前 BT/BLE NET 四角色 closeout。
+
+BLE IP ping：PASS
+
+- case: `ble-ip-ping`
+- build: `FeatherCore/build/logs/build-ble1-ble-ip-ping-final.log`
+- build: `FeatherCore/build/logs/build-ble2-ble-ip-ping-final.log`
+- run: `FeatherCore/build/logs/run-ble-ip-ping-final.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-ble-ip-ping-final/run-results.json`
+- roles: `ble1`, `ble2`
+- datapath: `bt0`, `fc00::1 <-> fc00::2`, `ping6 -c 2`, `0% packet loss`
+
+BLE 6LoWPAN/IPSP 证据：两端状态包含 `linux-bt-6lowpan: registered=1 ifname=bt0`、`ipsp-state=open`、`upstream-owner=net_bluetooth/6lowpan+sim-ipsp-datapath-owner`、`upstream-iphc-owner=net_6lowpan/iphc`，ping 后 `upstream-owner-xmit/rx-deliver/bt-xmit/recv-cb` 和 `tx-iphc/rx-iphc` 均有非零计数，down 后回到 `registered=0`、`ipsp-state=closed`、owner refs 为 0。
+
+BT/BLE NET current closeout：PASS
+
+- case: `bluez-net-current-complete-closeout`
+- build: `FeatherCore/build/logs/build-bt1-net-current-final.log`
+- build: `FeatherCore/build/logs/build-bt2-net-current-final.log`
+- run: `FeatherCore/build/logs/run-net-current-final.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-net-current-final/run-results.json`
+- roles: `bt1`, `bt2`, `ble1`, `ble2`
+
+BT BNEP/BlueZ Network 证据：BT1/BT2 两端通过 `blueznetwork daemon-profile` 覆盖 PANU/NAP/GN role lifecycle，`btn0` 上完成 `10.77.0.1 <-> 10.77.0.2` ping，包含 1400-byte payload ping，`0% packet loss`。日志中 native BNEP path 有 `bnep-native-session-thread`、`bnep-native-kthread-run`、`bnep-native-ndo-start-xmit`、`bnep-native-netdev-xmit`、`bnep-native-tx-frame-ok`、`bnep-native-l2cap-delivered`、`bnep-native-rx-frame-ok`、`bnep-native-netif-rx` 非零计数，且 `bnep-staging-active=0`、cleanup 后 `bnep-native-active=0`。
+
+BlueZ-facing 边界：BT Network coverage map 仍标记 `staged-boundary=blueznetwork-adapter-not-unmodified-bluetoothd`，BLE IPSP coverage map 仍标记 `staged-boundary=bluezdaemon-ipsp-adapter-not-unmodified-bluetoothd`。因此当前结论是：BT/BLE NET 当前 hwsim semantic closeout 已通过，BLE IP ping 旧缺口已收口，但仍不是 unmodified upstream `bluetoothd` Network/IPSP plugin 完全无 adapter 运行。下一步若继续 NET，应优先验证或修复 BT/BLE iperf TCP/UDP matrix 和更长时间生命周期；若回到“完整移植”目标，则要拆除 `blueznetwork`/`bluezdaemon ipsp` staged adapter，改为 upstream daemon/profile 入口直接拥有 fd、D-Bus object 和 session lifecycle。
+
+## 2026-06-14 A2DP upstream convergence baseline + CMake apps entry closeout
+
+本轮在 LE Audio final closeout 和 BT/BLE basic closeout 之后，按顺序重新验证 A2DP 当前最强 upstream convergence gate，并补齐 BlueZ apps 侧 CMake 注册缺口。
+
+A2DP upstream convergence：PASS
+
+- case: `bluez-a2dp-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-a2dp-upstream-final.log`
+- build: `FeatherCore/build/logs/build-bt2-a2dp-upstream-final.log`
+- run: `FeatherCore/build/logs/run-a2dp-upstream-final.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-a2dp-upstream-final/run-results.json`
+- roles: `bt1` source, `bt2` sink
+
+验证证据包括：A2DP profile/device/SDP lifecycle、D-Bus object lifecycle、mainloop watch/dispatch lifecycle、AVDTP transaction/state machine、MediaTransport fd ownership、SBC codec datapath、AVRCP control/browsing、L2CAP channel ownership、error policy 和两轮 cleanup；source/sink 两端均输出 `final-ok=1`。
+
+构建入口收口：`FeatherCore/apps/wireless/linux_bluetooth/CMakeLists.txt` 已补齐 `CONFIG_LINUX_BLUEZ_NETWORK`、`CONFIG_LINUX_BLUEZ_DAEMON`、`CONFIG_LINUX_BLUEZ_AUDIO` 三个 apps 注册项，并为 `bluezaudio` 补上 SBC/LC3 backend 源与 include flags，使 BlueZ-facing network/daemon/audio apps 不再只覆盖 Makefile 构建路径。
+
+仍保留边界：A2DP gate 明确包含 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`。这说明当前 A2DP 已有强 hwsim semantic convergence baseline，但还不是 unmodified upstream `bluetoothd` audio plugin 在 NuttX 上完全无 adapter 运行。下一步进入 BT/BLE NET 前，A2DP 的真实剩余工作是拆除 `bluezdaemon` staged adapter，改为 upstream `bluetoothd` mainloop/D-Bus/profile/audio plugin 入口直接拥有对象和 fd lifecycle。
+
+## 2026-06-14 LE Audio final closeout + BT/BLE basic closeout
+
+本轮按优先级重新收口两个阶段：先验证 LE Audio 当前阶段全功能 umbrella，再验证 BT/BLE 基础能力四角色 upstream convergence gate。
+
+LE Audio final closeout：PASS
+
+- case: `bluez-le-audio-umbrella`
+- build: `FeatherCore/build/logs/build-ble1-le-audio-final-closeout.log`
+- build: `FeatherCore/build/logs/build-ble2-le-audio-final-closeout.log`
+- run: `FeatherCore/build/logs/run-le-audio-final-closeout.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-le-audio-final-closeout/run-results.json`
+- roles: `ble1`, `ble2`
+
+BT/BLE basic closeout：PASS
+
+- case: `bluez-basic-upstream-convergence-closeout`
+- build: `FeatherCore/build/logs/build-bt1-basic-final-closeout.log`
+- build: `FeatherCore/build/logs/build-bt2-basic-final-closeout.log`
+- run: `FeatherCore/build/logs/run-basic-final-closeout.log`
+- manifest: `FeatherCore/build/bt-hwsim-usecases-basic-final-closeout/run-results.json`
+- roles: `bt1`, `bt2`, `ble2`, `ble1`
+
+当前结论：LE Audio 当前阶段 full-role umbrella 已重新验证通过，BT/BLE 基础扫描、连接、认证、错误路径和基础 BR/EDR/BLE 链路也已四角色通过。下一阶段按顺序继续补完整 A2DP，再补 BT/BLE NET；仍保留 staged adapter 边界说明，不声明 unmodified upstream `bluetoothd` / kernel Bluetooth stack 已完全无适配运行。
+
+# 2026-06-14 BLE Ranging/RAP profile closeout
+
+新增 BLE 双角色 Ranging/RAP profile gate：
+
+```text
+case:     bluez-ranging-profile-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-ranging-profile.log
+build:    build/logs/build-ble2-ranging-profile.log
+run:      build/logs/run-bluez-ranging-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-ranging-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- Ranging initiator/reflector：capability、security、procedure config/start/request、result/event stream、error recovery、cleanup。
+- `bluezdaemon profile-ranging-closeout` 输出 BlueZ Ranging/RAP source map 与 Linux HCI/mgmt/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-ranging-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第十三个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` Ranging profile 的最终完成声明。
+
+下一步：进入更深 upstream replacement / 去 staged adapter 化。
+
+# 2026-06-14 BLE MIDI profile closeout
+
+新增 BLE 双角色 MIDI profile gate：
+
+```text
+case:     bluez-midi-profile-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-midi-profile.log
+build:    build/logs/build-ble2-midi-profile.log
+run:      build/logs/run-bluez-midi-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-midi-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- BLE MIDI controller/peripheral：MIDI GATT service、MIDI I/O characteristic、timestamped packets、notify/write、jitter/error policy、cleanup。
+- `bluezdaemon profile-midi-closeout` 输出 BlueZ MIDI/GATT source map 与 Linux HCI/mgmt/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-midi-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第十二个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` MIDI profile 的最终完成声明。
+
+下一步：继续 Ranging 等剩余小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic iAP accessory profile closeout
+
+新增 BT 双角色 iAP accessory profile gate：
+
+```text
+case:     bluez-iap-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-iap-profile.log
+build:    build/logs/build-bt2-iap-profile.log
+run:      build/logs/run-bluez-iap-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-iap-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- iAP controller/accessory：SDP/SPP、RFCOMM session、identify、external accessory session、control payload、link control、error recovery、cleanup。
+- `bluezdaemon profile-iap-closeout` 输出 BlueZ iAP source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-iap-adapter-not-unmodified-iapd`。这是剩余 profile 阶段的第十一个 hwsim semantic closeout，不是 unmodified upstream `iapd` 的最终完成声明。
+
+下一步：继续 MIDI/Ranging 等剩余小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic CUPS/HCRP/SPP printing profile closeout
+
+新增 BT 双角色 CUPS/HCRP/SPP printing profile gate：
+
+```text
+case:     bluez-print-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-print-profile.log
+build:    build/logs/build-bt2-print-profile.log
+run:      build/logs/run-bluez-print-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-print-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- Printing client/printer：SDP HCRP/SPP、RFCOMM session、HCRP control/data、CUPS backend、print job submit/receive/render/status/cancel/error、cleanup。
+- `bluezdaemon profile-print-closeout` 输出 BlueZ CUPS/HCRP/SPP source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-print-adapter-not-unmodified-cups-backend`。这是剩余 profile 阶段的第十个 hwsim semantic closeout，不是 unmodified upstream CUPS backend/HCRP 的最终完成声明。
+
+下一步：继续 iAP/MIDI/Ranging 等剩余小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic OBEX BIP/Imaging profile closeout
+
+新增 BT 双角色 OBEX BIP/Imaging profile gate：
+
+```text
+case:     bluez-obex-bip-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-obex-bip-profile.log
+build:    build/logs/build-bt2-obex-bip-profile.log
+run:      build/logs/run-bluez-obex-bip-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-obex-bip-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- BIP client/server：SDP、RFCOMM transport、OBEX session、image capabilities、put/get image、thumbnail、abort/error、cleanup。
+- `bluezdaemon profile-bip-closeout` 输出 BlueZ `obexd` BIP source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-bip-obex-adapter-not-unmodified-obexd`。这是剩余 profile 阶段的第九个 hwsim semantic closeout，不是 unmodified upstream `obexd` BIP 的最终完成声明。
+
+下一步：继续剩余小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 BLE ASHA/Hearing Aid profile closeout
+
+新增 BLE 双角色 ASHA/Hearing Aid profile gate：
+
+```text
+case:     bluez-asha-profile-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-asha-profile.log
+build:    build/logs/build-ble2-asha-profile.log
+run:      build/logs/run-bluez-asha-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-asha-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- ASHA central/hearing-aid：service discovery、GATT control/status、paired side/hi-sync-id、G.722 stream、payload/status、volume/suspend/resume/stop、battery、error/reconnect、cleanup。
+- `bluezdaemon profile-asha-closeout` 输出 BlueZ ASHA/audio/GATT/BAS source map 与 Linux HCI/mgmt/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-asha-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第八个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` ASHA profile 的最终完成声明。
+
+下一步：继续剩余小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 Generic BLE GATT/Application Services closeout
+
+新增 BLE 双角色 Generic GATT/Application Services gate：
+
+```text
+case:     bluez-gatt-profile-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-gatt-profile.log
+build:    build/logs/build-ble2-gatt-profile.log
+run:      build/logs/run-bluez-gatt-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-gatt-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- GATT application/database：GAP/BAS/DIS/SCPP/custom service、characteristic、descriptor lifecycle。
+- ATT/GATT：MTU/security、discovery、read/write、prepare/execute write、notify/indicate、CCC、long/offset read、error policy、reconnect/unregister、cleanup。
+- `bluezdaemon profile-gatt-closeout` 输出 BlueZ GATT database/client/shared/profile source map 与 Linux HCI/mgmt/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-gatt-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第七个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` GATT database/client 的最终完成声明。
+
+下一步：继续剩余 profile 小项，然后推进更深 upstream replacement。
+
+# 2026-06-14 BLE Mesh profile closeout
+
+新增 BLE 双角色 Mesh profile gate：
+
+```text
+case:     bluez-mesh-profile-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-mesh-profile.log
+build:    build/logs/build-ble2-mesh-profile.log
+run:      build/logs/run-bluez-mesh-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-mesh-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- Provisioner/node：daemon init、ADV/GATT Proxy bearer、PB-ADV provisioning、key material、config client/server、Generic OnOff model。
+- Mesh networking：transport segmentation/reassembly、relay、friend/LPN、proxy、beacon、heartbeat、RPL/replay protection、error recovery、cleanup。
+- `bluezdaemon profile-mesh-closeout` 输出 BlueZ `mesh` source map 与 Linux HCI/mgmt/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-mesh-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第六个 hwsim semantic closeout，不是 unmodified upstream `bluetooth-meshd` 的最终完成声明。
+
+下一步：继续 Generic GATT/Application services 等剩余 profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic OBEX FTP/Sync profile closeout
+
+新增 BT 双角色 OBEX FTP/Sync profile gate：
+
+```text
+case:     bluez-obex-ftp-sync-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-obex-ftp-sync-profile.log
+build:    build/logs/build-bt2-obex-ftp-sync-profile.log
+run:      build/logs/run-bluez-obex-ftp-sync-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-obex-ftp-sync-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- FTP client/server：SDP、RFCOMM transport、OBEX session、folder listing、get/put/delete file、abort/error、cleanup。
+- Sync client/server：SDP、RFCOMM transport、OBEX session、phonebook/calendar/notes sync、abort/error、cleanup。
+- `bluezdaemon profile-sync-closeout` 输出 BlueZ `obexd` FTP/Sync source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-ftp-obex-adapter-not-unmodified-obexd` 与 `staged-boundary=bluezdaemon-sync-obex-adapter-not-unmodified-obexd`。这是剩余 profile 阶段的第五个 hwsim semantic closeout，不是 unmodified upstream `obexd` 的最终完成声明。
+
+下一步：继续 Generic GATT、Mesh 等剩余 profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic OBEX MAP/MNS profile closeout
+
+新增 BT 双角色 OBEX MAP/MNS profile gate：
+
+```text
+case:     bluez-obex-map-mns-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-obex-map-mns-profile.log
+build:    build/logs/build-bt2-obex-map-mns-profile.log
+run:      build/logs/run-bluez-obex-map-mns-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-obex-map-mns-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- MAP MAS/client-server：SDP、RFCOMM transport、OBEX session、set-folder、message listing/get/status/push、abort/error、cleanup。
+- MNS client/server：SDP、RFCOMM transport、OBEX session、NewMessage/DeliverySuccess/MessageDeleted event report、abort/error、cleanup。
+- `bluezdaemon profile-map-closeout` 输出 BlueZ `obexd` MAP/MNS source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-map-obex-adapter-not-unmodified-obexd` 与 `staged-boundary=bluezdaemon-mns-obex-adapter-not-unmodified-obexd`。这是剩余 profile 阶段的第四个 hwsim semantic closeout，不是 unmodified upstream `obexd` 的最终完成声明。
+
+下一步：继续 FTP/Sync、Generic GATT、Mesh 等剩余 profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic OBEX PBAP/OPP profile closeout
+
+新增 BT 双角色 OBEX PBAP/OPP profile gate：
+
+```text
+case:     bluez-obex-pbap-opp-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-obex-pbap-opp-profile.log
+build:    build/logs/build-bt2-obex-pbap-opp-profile.log
+run:      build/logs/run-bluez-obex-pbap-opp-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-obex-pbap-opp-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- PBAP PCE/PSE：SDP、RFCOMM transport、OBEX session、phonebook select、pull phonebook/listing/entry、abort/error、cleanup。
+- OPP client/server：SDP、RFCOMM transport、OBEX session、object push、capability query、abort/error、cleanup。
+- `bluezdaemon profile-obex-closeout` 输出 BlueZ `obexd` core/client/plugins source map 与 Linux RFCOMM/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-pbap-obex-adapter-not-unmodified-obexd` 与 `staged-boundary=bluezdaemon-opp-obex-adapter-not-unmodified-obexd`。这是剩余 profile 阶段的第三个 hwsim semantic closeout，不是 unmodified upstream `obexd` 的最终完成声明。
+
+下一步：继续 MAP/MNS、FTP/Sync、Generic GATT、Mesh 等剩余 profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic HFP/HSP profile closeout
+
+新增 BT 双角色 headset/telephony profile gate：
+
+```text
+case:     bluez-hfp-hsp-profile-closeout
+roles:    bt1, bt2
+build:    build/logs/build-bt1-hfp-hsp-profile.log
+build:    build/logs/build-bt2-hfp-hsp-profile.log
+run:      build/logs/run-bluez-hfp-hsp-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-hfp-hsp-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- HFP HF/AG：SDP service、Profile1-style connect、RFCOMM session、AT SLC、indicator/call-control、codec negotiation、SCO audio、volume、cleanup。
+- HSP HS/AG：SDP service、RFCOMM session、CKPD/RING/VGS/VGM control、SCO audio、cleanup。
+- `bluezdaemon profile-hfp-closeout` 输出 BlueZ HFP/telephony/media/transport source map 与 Linux RFCOMM/SCO/L2CAP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-hfp-adapter-not-unmodified-bluetoothd` 与 `staged-boundary=bluezdaemon-hsp-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第二个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` HFP/HSP 的最终完成声明。
+
+下一步：继续 PBAP/OBEX、MAP、Generic GATT、Mesh 等剩余 profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 Classic HID + BLE HOGP profile closeout
+
+新增四角色 input profile gate：
+
+```text
+case:     bluez-hid-hogp-profile-closeout
+roles:    bt1, bt2, ble2, ble1
+build:    build/logs/build-bt1-hid-hogp-profile.log
+build:    build/logs/build-bt2-hid-hogp-profile.log
+build:    build/logs/build-ble1-hid-hogp-profile.log
+build:    build/logs/build-ble2-hid-hogp-profile.log
+run:      build/logs/run-bluez-hid-hogp-profile-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-hid-hogp-profile-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 要求：
+
+- BT1/BT2 Classic HID：SDP HID service、Profile1-style connect、L2CAP control PSM `0x0011`、interrupt PSM `0x0013`、HIDP connadd、input/output report、cleanup。
+- BLE2/BLE1 HOGP：GATT HID service、report map、protocol mode、boot reports、CCC notify、input/output report、suspend/resume、cleanup。
+- `bluezdaemon profile-hid-closeout` 输出 BlueZ input/HOGP/profile/device/adapter/shared GATT source map 与 Linux HIDP/L2CAP/SMP source map，且 `final-ok=1`。
+
+边界：仍保留 `staged-boundary=bluezdaemon-input-adapter-not-unmodified-bluetoothd` 与 `staged-boundary=bluezdaemon-hogp-adapter-not-unmodified-bluetoothd`。这是剩余 profile 阶段的第一个 hwsim semantic closeout，不是 unmodified upstream `bluetoothd` input plugin 的最终完成声明。
+
+下一步：继续剩余 BT/BLE profiles，然后推进更深 upstream replacement。
+
+# 2026-06-14 BT/BLE NET upstream convergence rerun after A2DP
+
+BT/BLE basic 与 A2DP upstream convergence 都通过后，重新运行四角色 NET gate：
+
+```text
+case:     bluez-net-upstream-convergence-closeout
+roles:    bt1, bt2, ble1, ble2
+run:      build/logs/run-bluez-net-upstream-convergence-after-a2dp.log
+manifest: build/bt-hwsim-usecases-bluez-net-upstream-convergence-after-a2dp/run-results.json
+result:   PASS
+```
+
+该 gate 继续要求：
+
+- BT Network/BNEP：PANU/NAP/GN role policy、NetworkServer1 registration、L2CAP fd handoff、BNEPCONNADD、btn0 ping、MTU1400 ping、BNEP native datapath counters、disconnect/unregister cleanup。
+- BLE IPSP/6LoWPAN：Profile1/mainloop、LE L2CAP CoC fd handoff、bt0 ping6、TCP/UDP iperf、IPHC/fragment counters、disconnect cleanup、owner refs 归零。
+- `bluez-network: closeout upstream-coverage-map ... final-ok=1` 和 `bluez-daemon: ipsp closeout upstream-coverage-map ... final-ok=1`。
+
+边界：仍保留 `staged-boundary=blueznetwork-adapter-not-unmodified-bluetoothd` 与 `staged-boundary=bluezdaemon-ipsp-adapter-not-unmodified-bluetoothd`。这是 NET 当前 hwsim semantic closeout 证据，不是 unmodified upstream `bluetoothd` Network plugin 与 Linux kernel BNEP/6LoWPAN 完全无 adapter harness 的声明。
+
+下一步：进入剩余 BT/BLE profile 和更深 upstream replacement。
+
+# 2026-06-14 A2DP upstream convergence rerun after BT/BLE basic
+
+`bluez-basic-upstream-convergence-closeout` 通过后，重新运行 A2DP upstream convergence gate：
+
+```text
+case:     bluez-a2dp-upstream-convergence-closeout
+roles:    bt1, bt2
+run:      build/logs/run-bluez-a2dp-upstream-convergence-after-basic.log
+manifest: build/bt-hwsim-usecases-bluez-a2dp-upstream-convergence-after-basic/run-results.json
+result:   PASS
+```
+
+该 gate 继续要求 source/sink 双端的 `audio-a2dp-closeout-full`，包括 profile/session、SDP profile、D-Bus object lifecycle、mainloop/watch ownership、AVDTP transaction/state machine、AVRCP、MediaTransport fd、SBC codec、L2CAP controller ownership、error policy 和 final cleanup。
+
+边界：仍保留 `staged-boundary=bluezdaemon-adapter-not-unmodified-bluetoothd`。这是 A2DP 当前 hwsim semantic closeout 证据，不是 unmodified upstream `bluetoothd` audio plugin 完全直接运行声明。
+
+下一步：继续 BT/BLE NET completion。
+
+# 2026-06-14 BT/BLE basic upstream convergence closeout
+
+新增四角色 basic closeout gate：
+
+```text
+case:     bluez-basic-upstream-convergence-closeout
+roles:    bt1, bt2, ble2, ble1
+build:    build/logs/build-bt1-basic-upstream-convergence.log
+build:    build/logs/build-bt2-basic-upstream-convergence.log
+build:    build/logs/build-ble1-basic-upstream-convergence.log
+build:    build/logs/build-ble2-basic-upstream-convergence.log
+run:      build/logs/run-bluez-basic-upstream-convergence-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-basic-upstream-convergence-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 将 BT/BLE basic 能力从分散验证收束成一个阶段边界：
+
+- BT1/BT2：BR/EDR mgmt power/connectable/discoverable、scan/connect/pair、L2CAP echo、basic closeout。
+- BLE2：LE power、advertising、重复 advertising 窗口、basic closeout。
+- BLE1：BlueZ daemon discovery-peer、btmgmt control/lifecycle/pair-noio、daemon pairing-matrix、reconnect-stress、device-policy、btmgmt error-path、basic closeout。
+- `bluezdaemon basic-closeout bt|ble` 输出 `basic closeout upstream-coverage-map ... final-ok=1`，要求 BlueZ `main.c`、`adapter.c`、`device.c`、`agent.c`、`dbus-common.c`、`shared/mainloop.c`、`shared/io-mainloop.c`、`btmgmt.c`、`hcitool.c` 与 Linux `hci_core.c`、`hci_sock.c`、`mgmt.c`、`l2cap_core.c`、`l2cap_sock.c`、`smp.c` 出现在 evidence 中。
+
+边界：该 gate 是当前 NuttX sim hwsim 的 BT/BLE basic semantic closeout，保留 `staged-boundary=bluezdaemon-basic-adapter-not-unmodified-bluetoothd`。它证明基础扫描、连接、认证、重连、错误路径和 BR/EDR basic L2CAP link 已有闭环证据，但不是整套 Linux 蓝牙协议栈完成声明。
+
+下一步：按当前顺序回到 A2DP completion，再继续 BT/BLE NET completion。
+
+# 2026-06-14 BLE GATT/ATT upstream convergence closeout
+
+新增 BLE GATT/ATT completion gate：
+
+```text
+case:     bluez-gatt-upstream-convergence-closeout
+roles:    ble1, ble2
+build:    build/logs/build-ble1-gatt-upstream-convergence.log
+build:    build/logs/build-ble2-gatt-upstream-convergence.log
+run:      build/logs/run-bluez-gatt-upstream-convergence-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-gatt-upstream-convergence-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 让 BLE GATT/ATT 不再只作为 LE Audio 子步骤隐式出现，而是单独要求 source/sink 双角色完成：
+
+- ATT bearer open、MTU exchange、security、CCC、prepare/execute write、indication、close。
+- ATT I/O attach、mainloop rx/tx watch、rx/tx PDU、fragment/reassemble、CCC persist、flush、detach。
+- ATT request queue alloc、enqueue、socket read/write、timeout、cancel、error response、complete、free。
+- PACS/ASCS GATT DB register、discover、read、write、notify、release。
+- `le-gatt upstream-coverage-map ... final-ok=1`，并要求 BlueZ `shared/att.c`、`gatt-db.c`、`gatt-server.c`、`io-mainloop.c`、audio `pacs.c`、`ascs.c` 与 Linux `l2cap_sock.c`、`l2cap_core.c` 出现在 evidence 中。
+
+边界：当前仍是 hwsim semantic closeout，保留 `staged-boundary=bluezaudio-gatt-adapter-not-unmodified-bluetoothd`。它用于收口 BLE 基础能力和 LE Audio 共用的 ATT/GATT 地基，不代表 unmodified upstream `bluetoothd` 已完整直接运行。
+
+后续顺序固定为：LE Audio 全功能 -> BT/BLE basic -> A2DP -> BT/BLE NET -> 剩余 BT/BLE profile。
+
+# 2026-06-14 A2DP current complete closeout
+
+新增 A2DP completion gate：
+
+```text
+case:     bluez-a2dp-current-complete-closeout
+roles:    bt1, bt2
+run:      build/logs/run-bluez-a2dp-current-complete-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-a2dp-current-complete-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 固化 `bluezdaemon audio-a2dp-closeout-full source|sink` 为当前 A2DP 完成态，覆盖 bluetoothd-shaped mainloop、SDP/profile、D-Bus owner recovery、AVDTP/AVRCP、MediaTransport fd、SBC codec、controller-created L2CAP、error policy、两轮 lifecycle 和 final cleanup。
+
+# 2026-06-14 BlueZ HCI/mgmt/socket ABI closeout
+
+新增 BLE 双角色基础 ABI gate：
+
+```text
+case:     bluez-hci-mgmt-socket-closeout-full
+roles:    ble1, ble2
+run:      build/logs/run-bluez-hci-mgmt-socket-closeout-full.log
+manifest: build/bt-hwsim-usecases-bluez-hci-mgmt-socket-closeout-full/run-results.json
+result:   PASS
+```
+
+覆盖点：
+
+- BLE1: HCI USER advertising、command、monitor、sequence、error、init sequence、ISO setup monitor。
+- BLE2: HCI USER scan report，消费 BLE1 写入的 hwsim ADV public-file medium。
+- BLE1: HCI ioctl basic、HCI RAW command、BlueZ mgmt control/pairing/error/reconnect-stress、btmon monitor。
+
+语义约束：`HCI_CHANNEL_USER` 按 Linux 行为是独占 channel，必须在 ioctl/mgmt 接管 controller 前执行；否则会得到 busy。该 gate 已按 USER -> ioctl/raw/mgmt/monitor 的顺序固定。
+
+# 2026-06-14 BlueZ current functional closeout
+
+新增 hwsim 组合 gate：
+
+```text
+case:     bluez-current-functional-closeout
+roles:    bt1, bt2, ble1, ble2
+run:      build/logs/run-bluez-current-functional-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-current-functional-closeout/run-results.json
+result:   PASS
+```
+
+该 gate 同时启动四个 sim 角色：
+
+- BT1/BT2 先执行 A2DP daemon closeout，再执行 BlueZ Network/BNEP closeout。
+- BLE1/BLE2 同时执行 bluetoothd-style IPSP closeout。
+- validator 检查 A2DP complete/cleanup、BT Network `bnep-native-active=0`、BLE IPSP `registered=0` / `ipsp-state=closed`。
+
+这轮先暴露了 A2DP source transaction 在繁忙 hwsim 下可能漏记 `avdtp-start` response 的问题；修复为 expected-payload 匹配后通过。
+
+# 2026-06-14 LE Audio umbrella 与 BT/BLE basic closeout
+
+当前 hwsim 验证顺序先完成 LE Audio full-role umbrella，再完成 BT/BLE 基础能力 closeout。
+
+LE Audio gate：
+
+```text
+case:     bluez-le-audio-umbrella
+run:      build/logs/run-le-audio-umbrella.log
+manifest: build/bt-hwsim-usecases-le-audio-umbrella/run-results.json
+result:   PASS
+```
+
+BT/BLE basic gate：
+
+```text
+cases:
+  bt-basic
+  ble-basic
+  hci-le-lifecycle
+  hci-le-medium
+  hci-le-pairing
+  mgmt-control
+  bluez-mgmt-control
+  bluez-mgmt-pair-noio
+  bluez-mgmt-pair-unpair
+  bluez-mgmt-lifecycle
+  bluez-daemon-mgmt-full-lifecycle
+  bluez-basic-mgmt-flow
+  bluez-basic-scan-connect-auth-flow
+
+run:      build/logs/run-basic-closeout.log
+manifest: build/bt-hwsim-usecases-basic-closeout/run-results.json
+result:   PASS
+```
+
+`btctl poll ctrl` 语义更新：
+
+- 读取 `bt-hwsim-ctrl.bin` 的 raw CTRL record。
+- 跳过本机 self record，只处理 peer/control broadcast record。
+- 调用 Linux-port control record processor，更新本地 connect/disconnect/pairing state。
+- 非阻塞返回；没有新 record 时返回 0。
+- 用于 passive BLE 端在不阻塞 scan 的情况下推进 HCI connection lifecycle，并配合 `btctl events` / `btctl upstream hci-status` 输出 validator evidence。
+
+边界：这些 gate 证明当前 sim/hwsim 通路已经收口，但完整 upstream Linux Bluetooth host stack 接管仍按 staged Kconfig 继续推进。
+
 # NuttX sim BT/BLE hwsim 移植入口
 
 ## 当前落地内容
@@ -800,3 +2459,322 @@ tools/firmware/sim/build-bt2.sh
 tools/firmware/sim/build-ble1.sh
 tools/firmware/sim/build-ble2.sh
 ```
+## 2026-06-14 BT/BLE NET upstream convergence closeout
+
+新增 `bluez-net-upstream-convergence-closeout`。
+
+验证结果：PASS
+
+```text
+case:     bluez-net-upstream-convergence-closeout
+roles:    bt1, bt2, ble1, ble2
+run:      build/logs/run-bluez-net-upstream-convergence-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-net-upstream-convergence-closeout/run-results.json
+```
+
+该 gate 强制检查 BT Network/BNEP 和 BLE IPSP/6LoWPAN 的 `upstream-coverage-map`，覆盖 BlueZ Network/IPSP 源文件、Linux BNEP/6LoWPAN/L2CAP/IPHC 源文件，以及 `btn0` / `bt0` 数据面和 final cleanup。
+
+边界仍是 staged adapter：BT `blueznetwork-adapter-not-unmodified-bluetoothd`，BLE `bluezdaemon-ipsp-adapter-not-unmodified-bluetoothd`。
+
+## 2026-06-14 A2DP upstream convergence closeout
+
+新增 `bluez-a2dp-upstream-convergence-closeout`。
+
+验证结果：PASS
+
+```text
+case:     bluez-a2dp-upstream-convergence-closeout
+roles:    bt1, bt2
+run:      build/logs/run-bluez-a2dp-upstream-convergence-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-a2dp-upstream-convergence-closeout/run-results.json
+```
+
+该 gate 强制检查 `upstream-coverage-map`，覆盖 BlueZ `profile/device/adapter/dbus/mainloop/sdpd/audio` 源文件、Linux L2CAP 源文件，以及 source/sink 双端 profile/dbus/mainloop/transaction/media/codec/transport/AVRCP/L2CAP/state/cleanup final evidence。
+
+边界仍是 staged adapter：`bluezdaemon-adapter-not-unmodified-bluetoothd`。
+
+## 2026-06-14 BT/BLE NET current complete closeout
+
+新增 `bluez-net-current-complete-closeout`，用于把 BT Network/BNEP 和 BLE IPSP/6LoWPAN 的基础数据面收成一个四角色 hwsim gate。
+
+验证结果：PASS
+
+```text
+case:     bluez-net-current-complete-closeout
+roles:    bt1, bt2, ble1, ble2
+run:      build/logs/run-bluez-net-current-complete-closeout.log
+manifest: build/bt-hwsim-usecases-bluez-net-current-complete-closeout/run-results.json
+```
+
+覆盖 BT `btn0` ping reply、BNEP native TX/L2CAP/RX/netif counters、PANU/NAP/GN role lifecycle、error cleanup，以及 BLE `bt0` ping6、TCP/UDP iperf、IPHC/fragment counters、Profile1/mainloop ownership 和 final cleanup。
+
+边界：该综合 gate 负责基础能力收口；BT Network MTU1400 压测仍由 `bluez-network-closeout-full` 单项 gate 覆盖。
+
+## 2026-06-14 A2DP upstream AVDTP signaling sequence closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding an AVDTP signaling sequence gate to the upstream handler bridge surface.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-avdtp-signaling-closeout.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-avdtp-signaling-closeout/run-results.json`
+- New required marker: `upstream-avdtp-signaling=discover:1,getcap:1,set-config:1,open:1,start:1,suspend:1,close:1,abort:1,total:8`
+
+This keeps the staged adapter boundary explicit while moving the A2DP closeout closer to upstream BlueZ AVDTP request/response ordering and lifecycle semantics.
+
+## 2026-06-14 A2DP upstream linked handler/mainloop closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the linked handler/mainloop gate.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-linked-handler-mainloop.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-linked-handler-mainloop/run-results.json`
+- New required marker: `upstream-linked-handler-mainloop=transport-dispatch:1,media-dispatch:1,pending:1,watch:1,cleanup:1,total:5`
+
+This gate checks the shared dispatch path plus pending request, mainloop watch, fd handoff, reply/error, and cleanup lifecycle semantics for the staged upstream handler bridge.
+
+## 2026-06-14 A2DP upstream profile daemon flow closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the profile-daemon lifecycle gate.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-profile-daemon-flow.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-profile-daemon-flow/run-results.json`
+- New required marker: `upstream-a2dp-profile-daemon=plugin-init:1,adapter-probe:1,endpoint-register:1,avdtp-bind:1,transport-export:1,daemon-cleanup:1,total:6`
+
+This gate checks plugin/init, adapter probe, endpoint registration, AVDTP binding, transport export, and daemon cleanup semantics in the staged upstream bridge.
+
+## 2026-06-14 A2DP upstream audio header/API link probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding `bluez/upstream_audio_link_probe.c` to the `bluezdaemon` build.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-upstream-audio-link-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-upstream-audio-link-probe/run-results.json`
+- New required marker: `upstream-audio-link-probe ... api=headers:1,callbacks:1,constants:1,profile:1,transport:1,total:5 ... final-ok=1`
+
+This is a build-chain step toward real upstream BlueZ linkage: upstream audio headers are now compiled from the symlinked upstream tree by an apps-side object, while upstream audio implementation `.c` objects remain a future step.
+
+## 2026-06-14 A2DP upstream AVDTP packet implementation probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the AVDTP packet implementation probe.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-avdtp-packet-impl-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-avdtp-packet-impl-probe/run-results.json`
+- New required marker: `upstream-avdtp-packet-impl-probe ... impl=packet-headers:1,transactions:1,fragments:1,signals:1,total:4 ... final-ok=1`
+
+This validates a ported upstream AVDTP packet/header implementation slice while keeping the boundary that the full upstream `avdtp.c` object is not yet linked unmodified.
+
+## 2026-06-14 A2DP upstream AVDTP parse implementation probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the AVDTP parse implementation probe.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-avdtp-parse-impl-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-avdtp-parse-impl-probe/run-results.json`
+- New required marker: `upstream-avdtp-parse-impl-probe ... impl=single:1,start:1,continue:1,end:1,transaction-mismatch:1,route:1,total:6 ... final-ok=1`
+
+This validates a ported upstream AVDTP parse-path implementation slice while keeping the boundary that the full upstream `avdtp.c` object is not yet linked unmodified.
+
+## 2026-06-14 A2DP upstream AVDTP signal implementation probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the AVDTP signal implementation probe.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-avdtp-signal-impl-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-avdtp-signal-impl-probe/run-results.json`
+- New required marker: `upstream-avdtp-signal-impl-probe ... impl=command-dispatch:1,accept-response:1,reject-response:1,error-map:1,total:4 ... final-ok=1`
+
+This validates a ported upstream AVDTP signal-path implementation slice while keeping the boundary that the full upstream `avdtp.c` object is not yet linked unmodified.
+
+## 2026-06-14 A2DP upstream AVDTP stream implementation probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the AVDTP stream implementation probe.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-avdtp-stream-impl-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-avdtp-stream-impl-probe/run-results.json`
+- New required marker: `upstream-avdtp-stream-impl-probe ... impl=state-machine:1,timers:1,pending-open:1,callbacks:1,cleanup:1,total:5 ... final-ok=1`
+
+This validates a ported upstream AVDTP stream lifecycle implementation slice while keeping the boundary that the full upstream `avdtp.c` object is not yet linked unmodified.
+
+## 2026-06-14 A2DP upstream setup implementation probe closeout
+
+`bluez-a2dp-upstream-convergence-closeout` was rerun after adding the A2DP setup implementation probe.
+
+- Result: PASS
+- Run log: `build/logs/run-a2dp-setup-impl-probe.log`
+- Manifest: `build/bt-hwsim-usecases-a2dp-setup-impl-probe/run-results.json`
+- New required marker: `upstream-a2dp-setup-impl-probe ... impl=setup-refs:1,callbacks:1,sep-lock:1,stream-attach:1,error-cleanup:1,total:5 ... final-ok=1`
+
+This validates a ported upstream A2DP setup/SEP/stream implementation slice while keeping the boundary that the full upstream `a2dp.c` object is not yet linked unmodified.
+
+## 2026-06-14 A2DP MediaTransport closeout marker
+
+`bluez-a2dp-upstream-convergence-closeout` now validates this additional marker on both roles:
+
+```text
+bluez-daemon: a2dp upstream-media-transport-impl-probe role=<source|sink> compile-unit=bluez/upstream_audio_link_probe.c source=third/bluez/profiles/audio/transport.c impl=state:1,owner:1,acquire-release:1,properties:1,cleanup:1,total:5 boundary=upstream-media-transport-impl-ported-not-yet-transport-c-object final-ok=1
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-media-transport-impl-probe.log`
+- `build/logs/build-bt2-a2dp-media-transport-impl-probe.log`
+- `build/logs/run-a2dp-media-transport-impl-probe.log`
+- `build/bt-hwsim-usecases-a2dp-media-transport-impl-probe/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP transport D-Bus FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-transport-dbus-fsm=acquire:1,try-acquire:1,release:1,select-unselect:1,error:1,final-zero:1,total:6
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-transport-dbus-fsm.log`
+- `build/logs/build-bt2-a2dp-transport-dbus-fsm.log`
+- `build/logs/run-a2dp-transport-dbus-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-transport-dbus-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP media endpoint D-Bus FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-media-endpoint-dbus-fsm=register:1,select:1,set:1,clear:1,unregister:1,error:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-media-endpoint-dbus-fsm.log`
+- `build/logs/build-bt2-a2dp-media-endpoint-dbus-fsm.log`
+- `build/logs/run-a2dp-media-endpoint-dbus-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-media-endpoint-dbus-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP media application D-Bus FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-media-application-dbus-fsm=register:1,endpoints:1,players:1,unregister:1,disconnect:1,error:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-media-application-dbus-fsm.log`
+- `build/logs/build-bt2-a2dp-media-application-dbus-fsm.log`
+- `build/logs/run-a2dp-media-application-dbus-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-media-application-dbus-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP AVRCP profile FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-avrcp-profile-fsm=player-register:1,controller:1,target:1,metadata:1,volume:1,disconnect:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-avrcp-profile-fsm.log`
+- `build/logs/build-bt2-a2dp-avrcp-profile-fsm.log`
+- `build/logs/run-a2dp-avrcp-profile-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-avrcp-profile-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP media stream FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-a2dp-media-stream-fsm=open:1,start:1,rtp:1,payload:1,suspend:1,close:1,error:1,final-zero:1,total:8
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-media-stream-fsm.log`
+- `build/logs/build-bt2-a2dp-media-stream-fsm.log`
+- `build/logs/run-a2dp-media-stream-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-media-stream-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP codec policy FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-a2dp-codec-policy-fsm=capability:1,select:1,set:1,reconfigure:1,delay:1,error:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-codec-policy-fsm.log`
+- `build/logs/build-bt2-a2dp-codec-policy-fsm.log`
+- `build/logs/run-a2dp-codec-policy-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-codec-policy-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP lifecycle stress FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-a2dp-lifecycle-stress-fsm=first-connect:1,cleanup:1,reconnect:1,duplicate-reject:1,media-resume:1,disconnect:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-lifecycle-stress-fsm.log`
+- `build/logs/build-bt2-a2dp-lifecycle-stress-fsm.log`
+- `build/logs/run-a2dp-lifecycle-stress-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-lifecycle-stress-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP upstream object-link readiness gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-a2dp-object-link-readiness=sources:1,headers:1,glib-dbus:1,mainloop:1,core-objects:1,l2cap-media:1,symbol-ownership:1,replacement-boundary:1,total:8
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-object-link-readiness.log`
+- `build/logs/build-bt2-a2dp-object-link-readiness.log`
+- `build/logs/run-a2dp-object-link-readiness.log`
+- `build/bt-hwsim-usecases-a2dp-object-link-readiness/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
+
+## 2026-06-14 A2DP negative/boundary FSM gate
+
+The `bluez-a2dp-upstream-convergence-closeout` case now requires the following source and sink marker:
+
+```text
+upstream-a2dp-negative-boundary-fsm=bad-state:1,mtu:1,fd:1,codec-recover:1,duplicate-request:1,abort-cleanup:1,final-zero:1,total:7
+```
+
+Latest evidence:
+
+- `build/logs/build-bt1-a2dp-negative-boundary-fsm.log`
+- `build/logs/build-bt2-a2dp-negative-boundary-fsm.log`
+- `build/logs/run-a2dp-negative-boundary-fsm.log`
+- `build/bt-hwsim-usecases-a2dp-negative-boundary-fsm/run-results.json`
+
+Result: `PASS bluez-a2dp-upstream-convergence-closeout`.
